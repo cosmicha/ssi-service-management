@@ -1,280 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resolution Knowledge Base</title>
-    <style>
-        * { box-sizing: border-box; }
 
-        :root{
-            --bg:#081120;
-            --bg2:#0f172a;
-            --line:#dbe4f0;
-            --text:#0f172a;
-            --muted:#64748b;
-            --blue:#2563eb;
-            --blue2:#1d4ed8;
-            --soft:#eff6ff;
-            --card:#ffffff;
-            --shadow:0 20px 50px rgba(15,23,42,.10);
-            --radius:24px;
-        }
+<div class="kb-view">
+    
+<div class="page-content kb-partial">
+    <div class="kb-hero">
+        <div class="kb-eyebrow">AI RESOLUTION LIBRARY</div>
+        <h2>Resolution Knowledge Base</h2>
+        <p>Premium library of reusable, AI-cleaned resolutions, ranked by usage, success rate, and learning score.</p>
+    </div>
 
-        body{
-            margin:0;
-            font-family:Inter, Arial, sans-serif;
-            color:var(--text);
-            background:
-                radial-gradient(circle at top left, rgba(37,99,235,.18), transparent 26%),
-                radial-gradient(circle at top right, rgba(14,165,233,.16), transparent 24%),
-                linear-gradient(180deg, #09111f 0%, #0d1728 34%, #f4f7fb 34%, #f4f7fb 100%);
-        }
+    <div class="kb-body">
+        
+<div class="app">
+    
 
-        .page{
-            max-width:1360px;
-            margin:0 auto;
-            padding:34px 22px 56px;
-        }
+    
+        
 
-        .hero{
-            border-radius:30px;
-            padding:28px 30px;
-            color:white;
-            margin-bottom:24px;
-            background:linear-gradient(135deg, rgba(15,23,42,.96), rgba(29,78,216,.88));
-            box-shadow:0 24px 60px rgba(2,6,23,.30);
-            border:1px solid rgba(255,255,255,.08);
-        }
+        <div class="page-content">
+            
+            
+<div class="page-content">
+    
+    
 
-        .hero-top{
-            display:flex;
-            justify-content:space-between;
-            align-items:flex-start;
-            gap:18px;
-            flex-wrap:wrap;
-        }
+<div class="app">
+    
 
-        .eyebrow{
-            display:inline-flex;
-            gap:10px;
-            align-items:center;
-            font-size:12px;
-            font-weight:800;
-            letter-spacing:.12em;
-            text-transform:uppercase;
-            color:rgba(255,255,255,.75);
-            margin-bottom:12px;
-        }
+    
+        
 
-        .eyebrow-dot{
-            width:10px;
-            height:10px;
-            border-radius:999px;
-            background:linear-gradient(135deg,#60a5fa,#22d3ee);
-            box-shadow:0 0 16px rgba(96,165,250,.8);
-        }
-
-        .hero h1{
-            margin:0 0 10px;
-            font-size:34px;
-            line-height:1.08;
-        }
-
-        .hero p{
-            margin:0;
-            max-width:760px;
-            color:rgba(255,255,255,.82);
-            font-size:15px;
-            line-height:1.7;
-        }
-
-        .hero-actions{
-            display:flex;
-            gap:12px;
-            flex-wrap:wrap;
-        }
-
-        .btn{
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            gap:8px;
-            padding:12px 18px;
-            border-radius:14px;
-            text-decoration:none;
-            font-size:14px;
-            font-weight:700;
-            border:none;
-            cursor:pointer;
-            transition:.2s ease;
-        }
-
-        .btn-primary{
-            background:linear-gradient(135deg, #3b82f6, #2563eb);
-            color:white;
-            box-shadow:0 12px 24px rgba(37,99,235,.34);
-        }
-
-        .btn-secondary{
-            background:rgba(255,255,255,.10);
-            color:white;
-            border:1px solid rgba(255,255,255,.16);
-            backdrop-filter:blur(8px);
-        }
-
-        .surface{
-            background:rgba(255,255,255,.94);
-            backdrop-filter:blur(12px);
-            border:1px solid rgba(148,163,184,.18);
-            box-shadow:var(--shadow);
-            border-radius:28px;
-            padding:22px;
-        }
-
-        .search-bar{
-            display:flex;
-            gap:12px;
-            align-items:center;
-            flex-wrap:wrap;
-            margin-bottom:18px;
-        }
-
-        .input{
-            flex:1;
-            min-width:260px;
-            border:1px solid #cbd5e1;
-            border-radius:16px;
-            padding:14px 16px;
-            font-size:15px;
-            background:white;
-            outline:none;
-        }
-
-        .input:focus{
-            border-color:#60a5fa;
-            box-shadow:0 0 0 4px rgba(96,165,250,.16);
-        }
-
-        .table-wrap{
-            overflow:auto;
-            border-radius:20px;
-            border:1px solid #e5e7eb;
-            background:white;
-        }
-
-        table{
-            width:100%;
-            border-collapse:collapse;
-            min-width:1080px;
-        }
-
-        th, td{
-            text-align:left;
-            padding:16px 16px;
-            vertical-align:top;
-            border-bottom:1px solid #eef2f7;
-        }
-
-        th{
-            font-size:12px;
-            font-weight:800;
-            letter-spacing:.08em;
-            text-transform:uppercase;
-            color:#64748b;
-            background:#f8fafc;
-        }
-
-        tr:hover td{
-            background:#fbfdff;
-        }
-
-        .preview{
-            width:68px;
-            height:68px;
-            border-radius:16px;
-            object-fit:cover;
-            border:1px solid #e5e7eb;
-            background:#f8fafc;
-        }
-
-        .title-main{
-            font-size:15px;
-            font-weight:800;
-            color:#0f172a;
-            margin-bottom:6px;
-        }
-
-        .title-sub{
-            font-size:12px;
-            color:#64748b;
-            line-height:1.5;
-        }
-
-        .summary{
-            font-size:14px;
-            color:#334155;
-            line-height:1.7;
-            max-width:360px;
-        }
-
-        .pill{
-            display:inline-flex;
-            align-items:center;
-            gap:6px;
-            padding:7px 10px;
-            border-radius:999px;
-            font-size:12px;
-            font-weight:800;
-            margin:0 8px 8px 0;
-            white-space:nowrap;
-        }
-
-        .pill-blue{ background:#dbeafe; color:#1d4ed8; }
-        .pill-green{ background:#dcfce7; color:#166534; }
-        .pill-slate{ background:#eef2ff; color:#475569; }
-
-        .action-stack{
-            display:flex;
-            gap:8px;
-            flex-wrap:wrap;
-        }
-
-        .btn-lite{
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            padding:10px 13px;
-            border-radius:12px;
-            text-decoration:none;
-            font-size:13px;
-            font-weight:800;
-            border:1px solid #dbeafe;
-            background:#eff6ff;
-            color:#1d4ed8;
-        }
-
-        .btn-dark{
-            border:1px solid #e2e8f0;
-            background:#0f172a;
-            color:white;
-        }
-
-        .empty{
-            text-align:center;
-            padding:36px 16px;
-            color:#64748b;
-            font-size:14px;
-        }
-
-        @media (max-width: 760px){
-            .page{ padding:18px 14px 40px; }
-            .hero, .surface{ border-radius:20px; padding:18px; }
-            .hero h1{ font-size:28px; }
-        }
-    </style>
-</head>
-<body>
+        
+<div class="kb-panel">
+    
     <div class="page">
         <div class="hero">
             <div class="hero-top">
@@ -283,14 +40,14 @@
                         <span class="eyebrow-dot"></span>
                         AI Resolution Library
                     </div>
-                    <h1>Resolution Knowledge Base</h1>
+                    
                     <p>
                         Premium library of reusable, AI-cleaned resolutions, ranked by usage, success rate, and learning score.
                     </p>
                 </div>
 
                 <div class="hero-actions">
-                    <a href="/problem-logs" class="btn btn-secondary">Back to Dashboard</a>
+                    
                 </div>
             </div>
         </div>
@@ -377,5 +134,78 @@
             </div>
         </div>
     </div>
-</body>
-</html>
+
+</div>
+
+    
+</div>
+
+
+
+<script>
+document.querySelectorAll('[data-toggle]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+        var group = btn.closest('[data-group]');
+        if (group) group.classList.toggle('is-open');
+    });
+});
+
+function toggleSidebar(){
+    const sb = document.getElementById('sidebar');
+    const main = document.getElementById('main');
+    if (!sb || !main) return;
+    sb.classList.toggle('collapsed');
+    main.classList.toggle('collapsed');
+    localStorage.setItem('sidebar', sb.classList.contains('collapsed') ? '1' : '0');
+}
+
+(function(){
+    const sb = document.getElementById('sidebar');
+    const main = document.getElementById('main');
+    if (!sb || !main) return;
+    if(localStorage.getItem('sidebar') === '1'){
+        sb.classList.add('collapsed');
+        main.classList.add('collapsed');
+    }
+})();
+</script>
+
+
+</div>
+
+        </div>
+    
+</div>
+
+<script>
+document.querySelectorAll('[data-toggle]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+        var group = btn.closest('[data-group]');
+        if (group) group.classList.toggle('is-open');
+    });
+});
+
+function toggleSidebar(){
+    const sb = document.getElementById('sidebar');
+    const main = document.getElementById('main');
+    if (!sb || !main) return;
+    sb.classList.toggle('collapsed');
+    main.classList.toggle('collapsed');
+    localStorage.setItem('sidebar', sb.classList.contains('collapsed') ? '1' : '0');
+}
+
+(function(){
+    const sb = document.getElementById('sidebar');
+    const main = document.getElementById('main');
+    if (!sb || !main) return;
+    if(localStorage.getItem('sidebar') === '1'){
+        sb.classList.add('collapsed');
+        main.classList.add('collapsed');
+    }
+})();
+</script>
+
+    </div>
+</div>
+
+</div>

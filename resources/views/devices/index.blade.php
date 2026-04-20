@@ -1,27 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Device Master</title>
-<style>
-body { font-family: Inter; background:#f8fafc; margin:0; }
-.page { max-width:1200px; margin:auto; padding:24px; }
-.card { background:white; padding:20px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,.05); }
-.btn {
-    padding:8px 12px;
-    border-radius:10px;
-    font-weight:700;
-    text-decoration:none;
-    font-size:13px;
-}
-.btn-edit { background:#2563eb; color:white; }
-.btn-view { background:#0f172a; color:white; }
-table { width:100%; border-collapse:collapse; }
-th, td { padding:12px; border-bottom:1px solid #e2e8f0; }
-.muted { color:#64748b; font-size:12px; }
-</style>
-</head>
-<body>
+
+<div class="spa-view">
+    
 
 <div class="page">
     
@@ -67,5 +46,5 @@ th, td { padding:12px; border-bottom:1px solid #e2e8f0; }
     </div>
 </div>
 
-</body>
-</html>
+
+</div>

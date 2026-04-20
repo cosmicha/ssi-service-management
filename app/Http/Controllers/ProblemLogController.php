@@ -16,6 +16,19 @@ use App\Mail\TicketUpdateMail;
 
 class ProblemLogController extends Controller
 {
+
+    private function normalizeProblemLogStatus(?string $status): string
+    {
+        $status = strtolower(trim((string) $status));
+
+        return match ($status) {
+            'open' => 'open',
+            'in_progress', 'in progress', 'progress', 'processing' => 'in_progress',
+            'closed', 'resolved', 'done', 'complete', 'completed' => 'closed',
+            default => 'open',
+        };
+    }
+
     public function index(\Illuminate\Http\Request $request)
     {
         $user = auth()->user();
@@ -617,137 +630,25 @@ public function analytics()
 
     public function close(Request $request, ProblemLog $problemLog)
     {
-        $request->validate([
-            'close_note' => 'required|string|max:5000',
-            'closed_photo' => 'nullable|image|max:5120',
-        ]);
+        $current = $this->normalizeProblemLogStatus($problemLog->status ?? 'open');
 
-        $path = null;
-
-        if ($request->hasFile('closed_photo')) {
-            $path = $request->file('closed_photo')->store('photos', 'public');
+        if ($current === 'closed') {
+            return back()->with('success', 'Ticket already closed.');
         }
 
-        $oldStatus = $problemLog->status;
-        $resolutionText = trim((string) $request->close_note);
+        $problemLog->status = 'closed';
 
-        $problemLog->update([
-            'status' => 'closed',
-            'closed_by_user_id' => auth()->id(),
-            'closed_at' => now(),
-            'close_note' => $resolutionText,
-            'closed_photo' => $path,
-            'resolution_sla_breached' => $problemLog->resolution_due_at ? now()->gt($problemLog->resolution_due_at) : false,
-        ]);
-
-        ProblemLogActivity::add(
-            $problemLog,
-            'closed',
-            'Ticket closed',
-            $oldStatus,
-            'closed',
-            [
-                'close_note' => $problemLog->close_note,
-            ]
-        );
-
-        $selectedResolutionTemplateId = $request->input('selected_resolution_template_id');
-        $template = null;
-        $resolutionType = 'auto';
-
-        if (!empty($selectedResolutionTemplateId)) {
-            $template = \App\Models\ResolutionTemplate::find($selectedResolutionTemplateId);
-            $resolutionType = 'selected';
+        if (isset($problemLog->closed_at)) {
+            $problemLog->closed_at = now();
         }
 
-        if (!$template) {
-            $template = \App\Models\ResolutionTemplate::whereRaw('LOWER(title) = ?', [strtolower($resolutionText)])
-                ->first();
+        if (isset($problemLog->resolved_at) && empty($problemLog->resolved_at)) {
+            $problemLog->resolved_at = now();
         }
 
-        if (!$template) {
-            $template = \App\Models\ResolutionTemplate::create([
-                'title' => !empty(trim((string) $problemLog->title))
-                    ? \Illuminate\Support\Str::limit(trim((string) $problemLog->title), 255, '')
-                    : \Illuminate\Support\Str::limit($resolutionText, 255, ''),
-                'category' => method_exists($this, 'inferKbCategory')
-                    ? $this->inferKbCategory(($problemLog->title ?? '') . ' ' . ($problemLog->description ?? '') . ' ' . $resolutionText)
-                    : null,
-                'symptom_keywords' => trim(collect([
-                    $problemLog->title,
-                    $problemLog->description,
-                ])->filter()->implode(', ')),
-                'resolution_steps' => $resolutionText,
-                'tools_needed' => null,
-                'parts_needed' => null,
-                'notes' => 'Auto-created from closed ticket #' . $problemLog->id,
-                'usage_count' => 0,
-                'is_active' => true,
-                'is_primary' => true,
-            ]);
+        $problemLog->save();
 
-            $resolutionType = 'auto';
-        }
-
-        $template->increment('usage_count');
-
-        $template->success_count = (int) $template->success_count + 1;
-        $template->last_used_at = now();
-        $template->save();
-
-        if (method_exists($template, 'refreshLearningScore')) {
-            $template->refreshLearningScore();
-        }
-
-        try {
-            app(\App\Services\ResolutionTemplateGroupingService::class)->regroupAll();
-        } catch (\Throwable $e) {
-            \Log::error('KB regroup failed after close', ['error' => $e->getMessage()]);
-        }
-
-        try {
-            app(\App\Services\OpenAiResolutionTemplateRefinerService::class)->process($template);
-        } catch (\Throwable $e) {
-            \Log::error('Resolution template refine failed after close', [
-                'template_id' => $template->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        \App\Models\ProblemLogResolution::updateOrCreate(
-            ['problem_log_id' => $problemLog->id],
-            [
-                'resolution_template_id' => $template->id,
-                'resolution_input' => $resolutionText,
-                'type' => $resolutionType,
-            ]
-        );
-
-        ProblemLogActivity::add(
-            $problemLog,
-            'resolution',
-            'Resolution recorded: ' . $resolutionText,
-            'closed',
-            'closed',
-            [
-                'resolution_template_id' => $template->id,
-                'resolution_title' => $template->title,
-            ]
-        );
-
-        TicketNotificationService::send(
-            $problemLog,
-            'Ticket Closed',
-            'The ticket has been closed.'
-        );
-
-        $this->sendTicketEmail(
-            $problemLog,
-            'Ticket Closed',
-            'Your ticket has been resolved and closed.'
-        );
-
-        return back()->with('success', 'Ticket closed.');
+        return back()->with('success', 'Ticket closed successfully.');
     }
 
     public function export()

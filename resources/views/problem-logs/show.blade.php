@@ -338,7 +338,7 @@
                 <div class="hero-actions">
                     <a href="/problem-logs" class="btn btn-secondary">Back to Dashboard</a>
 
-                    @if($problemLog->status !== 'closed' || ($currentUser->role ?? '') === 'admin')
+                    @if(((method_exists($problemLog, 'normalizedStatus') ? $problemLog->normalizedStatus() : $problemLog->status) !== 'closed') || ($currentUser->role ?? '') === 'admin')
                         <a href="/problem-logs/{{ $problemLog->id }}/edit" class="btn btn-secondary">Edit Ticket</a>
                     @endif
 
@@ -737,7 +737,7 @@
                                 </div>
                             </div>
                             <div class="sla-meta">Target: {{ $responseHours ?: '-' }} hour(s)</div>
-                            @if(!$problemLog->acknowledged_at && $problemLog->status !== 'closed')
+                            @if(!$problemLog->acknowledged_at && ((method_exists($problemLog, 'normalizedStatus') ? $problemLog->normalizedStatus() : $problemLog->status) !== 'closed'))
                                 <div class="sla-progress">
                                     <div class="sla-progress-bar" id="responseSlaBar"></div>
                                 </div>
@@ -773,7 +773,7 @@
                                 </div>
                             </div>
                             <div class="sla-meta">Target: {{ $resolutionHours ?: '-' }} hour(s)</div>
-                            @if($problemLog->status !== 'closed')
+                            @if(((method_exists($problemLog, 'normalizedStatus') ? $problemLog->normalizedStatus() : $problemLog->status) !== 'closed'))
                                 <div class="sla-progress">
                                     <div class="sla-progress-bar" id="resolutionSlaBar"></div>
                                 </div>
@@ -807,7 +807,7 @@
                     @endif
                 </div>
 
-                @if($currentRole === 'admin' && $problemLog->status !== 'closed')
+                @if($currentRole === 'admin' && ((method_exists($problemLog, 'normalizedStatus') ? $problemLog->normalizedStatus() : $problemLog->status) !== 'closed'))
                     <div class="card">
                         <div class="section-title">Assign Engineer</div>
                         <form method="POST" action="/problem-logs/{{ $problemLog->id }}/assign-engineer">
@@ -839,7 +839,7 @@
                     @endif
                 @endif
 
-                @if($currentRole === 'engineer' && $problemLog->status !== 'closed' && $isUnassignedOpen)
+                @if($currentRole === 'engineer' && ((method_exists($problemLog, 'normalizedStatus') ? $problemLog->normalizedStatus() : $problemLog->status) !== 'closed') && $isUnassignedOpen)
                     <div class="card">
                         <div class="section-title">Acknowledge Ticket</div>
                         <div class="muted">This ticket is still open and unassigned. Acknowledging it will also claim the ticket for you.</div>
@@ -850,7 +850,7 @@
                     </div>
                 @endif
 
-                @if($currentRole === 'engineer' && $problemLog->status !== 'closed' && $isAssignedOpenToCurrentEngineer)
+                @if($currentRole === 'engineer' && ((method_exists($problemLog, 'normalizedStatus') ? $problemLog->normalizedStatus() : $problemLog->status) !== 'closed') && $isAssignedOpenToCurrentEngineer)
                     <div class="card">
                         <div class="section-title">Take Ticket</div>
                         <div class="muted">This ticket is assigned to you. Taking it will automatically acknowledge the ticket and move it into progress.</div>
@@ -989,14 +989,14 @@
             }
         }
 
-        @if(!$problemLog->acknowledged_at && $problemLog->status !== 'closed')
+        @if(!$problemLog->acknowledged_at && ((method_exists($problemLog, 'normalizedStatus') ? $problemLog->normalizedStatus() : $problemLog->status) !== 'closed'))
         updateSlaPanel('responseSlaPanel', 'responseSlaTime', 'responseSlaBar', 'responseSlaLabel');
         setInterval(() => {
             updateSlaPanel('responseSlaPanel', 'responseSlaTime', 'responseSlaBar', 'responseSlaLabel');
         }, 1000);
         @endif
 
-        @if($problemLog->status !== 'closed')
+        @if(((method_exists($problemLog, 'normalizedStatus') ? $problemLog->normalizedStatus() : $problemLog->status) !== 'closed'))
         updateSlaPanel('resolutionSlaPanel', 'resolutionSlaTime', 'resolutionSlaBar', 'resolutionSlaLabel');
         setInterval(() => {
             updateSlaPanel('resolutionSlaPanel', 'resolutionSlaTime', 'resolutionSlaBar', 'resolutionSlaLabel');

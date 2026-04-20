@@ -7,6 +7,24 @@ use Illuminate\Support\Carbon;
 
 class ProblemLog extends Model
 {
+
+    public function normalizedStatus(): string
+    {
+        $status = strtolower(trim((string) ($this->status ?? 'open')));
+
+        return match ($status) {
+            'open' => 'open',
+            'in_progress', 'in progress', 'progress', 'processing' => 'in_progress',
+            'closed', 'resolved', 'done', 'complete', 'completed' => 'closed',
+            default => 'open',
+        };
+    }
+
+    public function isClosable(): bool
+    {
+        return $this->normalizedStatus() !== 'closed';
+    }
+
     protected $fillable = [
         'company_id',
         'created_by_user_id',
