@@ -1,116 +1,180 @@
 <x-app-layout>
-    <div style="min-height:100vh; background:#f3f4f6;">
-        <div style="display:flex; min-height:100vh;">
+    <div class="mb-8">
+        <h1 class="text-3xl font-black text-slate-950">Dashboard</h1>
+        <p class="text-slate-500 mt-1">Operations overview and real-time summary of your service management.</p>
+    </div>
 
-            <!-- SIDEBAR -->
-            <aside style="width:260px; background:#ffffff; border-right:1px solid #e5e7eb; padding:24px 20px;">
-                <div style="font-size:22px; font-weight:800; margin-bottom:28px; color:#111827;">
-                    Xion1 Support
+    <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 mb-6">
+        <a href="{{ route('incidents.create') }}" class="group bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="text-2xl text-[#ff8a00] mb-2">⚠</div>
+            <div class="font-black text-sm">New Incident</div>
+        </a>
+
+        <a href="{{ route('change-requests.create') }}" class="group bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="text-2xl text-[#ff8a00] mb-2">⇄</div>
+            <div class="font-black text-sm">New Change</div>
+        </a>
+
+        <a href="{{ route('preventive-schedules.create') }}" class="group bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="text-2xl text-[#ff8a00] mb-2">▣</div>
+            <div class="font-black text-sm">PM Schedule</div>
+        </a>
+
+        <a href="{{ route('tasks.create') }}" class="group bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="text-2xl text-[#ff8a00] mb-2">☑</div>
+            <div class="font-black text-sm">New Task</div>
+        </a>
+
+        <a href="{{ route('assets.create') }}" class="group bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="text-2xl text-[#ff8a00] mb-2">▤</div>
+            <div class="font-black text-sm">New Asset</div>
+        </a>
+
+        <a href="{{ route('customers.create') }}" class="group bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="text-2xl text-[#ff8a00] mb-2">♟</div>
+            <div class="font-black text-sm">New Customer</div>
+        </a>
+
+        <a href="{{ route('tasks.index') }}" class="group bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="text-2xl text-[#ff8a00] mb-2">◴</div>
+            <div class="font-black text-sm">Tasks</div>
+        </a>
+
+        <a href="#" class="group bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="text-2xl text-[#ff8a00] mb-2">▥</div>
+            <div class="font-black text-sm">Reports</div>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+        <a href="{{ route('tasks.index') }}" class="block bg-white rounded-2xl border border-slate-200 p-4 shadow-sm border-b-4 border-b-[#ff8a00] hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="h-9 w-9 rounded-xl bg-orange-100 text-[#ff8a00] flex items-center justify-center text-xl mb-3">☑</div>
+            <div class="font-black">Open Tasks</div>
+            <div class="text-3xl font-black mt-2">{{ $openTasks }}</div>
+            <div class="text-xs text-slate-500 mt-1">Tasks in progress</div>
+        </a>
+
+        <a href="{{ route('incidents.index') }}" class="block bg-white rounded-2xl border border-slate-200 p-4 shadow-sm border-b-4 border-b-[#ff8a00] hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="h-9 w-9 rounded-xl bg-orange-100 text-[#ff8a00] flex items-center justify-center text-xl mb-3">⚠</div>
+            <div class="font-black">Open Incidents</div>
+            <div class="text-3xl font-black mt-2">{{ $openIncidents }}</div>
+            <div class="text-xs text-slate-500 mt-1">Incidents active</div>
+        </a>
+
+        <div class="bg-black rounded-2xl border border-black p-6 shadow-sm border-b-4 border-b-[#ff8a00] text-white">
+            <div class="h-9 w-9 rounded-xl bg-black text-[#ff8a00] border border-[#ff8a00] flex items-center justify-center text-xl mb-3">⚠</div>
+            <div class="font-black">Critical Incidents</div>
+            <div class="text-3xl font-black mt-2">{{ $criticalIncidents }}</div>
+            <div class="text-xs text-white/70 mt-1">Requires immediate attention</div>
+        </div>
+
+        <a href="{{ route('change-requests.index') }}" class="block bg-white rounded-2xl border border-slate-200 p-4 shadow-sm border-b-4 border-b-[#ff8a00] hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="h-9 w-9 rounded-xl bg-orange-100 text-[#ff8a00] flex items-center justify-center text-xl mb-3">▤</div>
+            <div class="font-black">Pending Changes</div>
+            <div class="text-3xl font-black mt-2">{{ $pendingChanges }}</div>
+            <div class="text-xs text-slate-500 mt-1">Awaiting approval / execution</div>
+        </a>
+
+        <a href="{{ route('preventive-schedules.index') }}" class="block bg-white rounded-2xl border border-slate-200 p-4 shadow-sm border-b-4 border-b-[#ff8a00] hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="h-9 w-9 rounded-xl bg-orange-100 text-[#ff8a00] flex items-center justify-center text-xl mb-3">▣</div>
+            <div class="font-black">PM Due</div>
+            <div class="text-3xl font-black mt-2">{{ $pmDue }}</div>
+            <div class="text-xs text-slate-500 mt-1">Due for execution</div>
+        </a>
+
+        <a href="{{ route('assets.index') }}" class="block bg-white rounded-2xl border border-slate-200 p-4 shadow-sm border-b-4 border-b-[#ff8a00] hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="h-9 w-9 rounded-xl bg-orange-100 text-[#ff8a00] flex items-center justify-center text-xl mb-3">▦</div>
+            <div class="font-black">Total Assets</div>
+            <div class="text-3xl font-black mt-2">{{ $totalAssets }}</div>
+            <div class="text-xs text-slate-500 mt-1">Assets registered</div>
+        </a>
+
+        <a href="{{ route('incidents.index') }}" class="block bg-white rounded-2xl border border-slate-200 p-4 shadow-sm border-b-4 border-b-red-500 hover:shadow-lg hover:-translate-y-0.5 transition">
+            <div class="h-9 w-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-xl mb-3">⏱</div>
+            <div class="font-black">SLA Breach</div>
+            <div class="text-3xl font-black mt-2">{{ $slaBreached }}</div>
+            <div class="text-xs text-slate-500 mt-1">{{ $slaNoSla }} no SLA tickets</div>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="flex justify-between items-center mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="text-[#ff8a00] text-2xl">◷</div>
+                    <h2 class="text-xl font-black">Recent Tasks</h2>
                 </div>
+                <a href="{{ route('tasks.index') }}" class="text-[#ff8a00] font-bold">View All Tasks →</a>
+            </div>
 
-                <nav style="display:flex; flex-direction:column; gap:10px;">
-                    <a href="/" style="text-decoration:none; color:#111827; font-weight:600; padding:10px 12px; border-radius:12px; background:#f3f4f6;">Dashboard</a>
-                    <a href="/problem-logs" style="text-decoration:none; color:#111827; font-weight:600; padding:10px 12px; border-radius:12px;">Tickets</a>
-                    <a href="/devices" style="text-decoration:none; color:#111827; font-weight:600; padding:10px 12px; border-radius:12px;">Devices</a>
-                    <a href="/vendors" style="text-decoration:none; color:#111827; font-weight:600; padding:10px 12px; border-radius:12px;">Vendors</a>
-                    <a href="/resolution-library" style="text-decoration:none; color:#111827; font-weight:600; padding:10px 12px; border-radius:12px;">Knowledge Base</a>
-                    <a href="/analytics" style="text-decoration:none; color:#111827; font-weight:600; padding:10px 12px; border-radius:12px;">Analytics</a>
-                    <a href="/sla-dashboard" style="text-decoration:none; color:#111827; font-weight:600; padding:10px 12px; border-radius:12px;">SLA Dashboard</a>
-                    <a href="/help" style="text-decoration:none; color:#111827; font-weight:600; padding:10px 12px; border-radius:12px;">Help</a>
-                </nav>
-            </aside>
+            <div class="overflow-hidden rounded-xl border border-slate-100">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                        <tr>
+                            <th class="text-left px-4 py-3">Task No.</th>
+                            <th class="text-left px-4 py-3">Title</th>
+                            <th class="text-left px-4 py-3">Type</th>
+                            <th class="text-left px-4 py-3">Customer</th>
+                            <th class="text-left px-4 py-3">Asset</th>
+                            <th class="text-left px-4 py-3">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse($recentTasks as $task)
+                            <tr onclick="window.location='{{ route('tasks.show', $task) }}'" class="hover:bg-orange-50/40 cursor-pointer">
+                                <td class="px-4 py-4 text-slate-600">{{ $task->task_no }}</td>
+                                <td class="px-4 py-4">
+                                    <a href="{{ route('tasks.show', $task) }}" class="font-semibold hover:underline">{{ $task->title }}</a>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <span class="px-3 py-1 rounded-lg text-xs font-bold bg-orange-100 text-[#ff8a00] capitalize">
+                                        {{ str_replace('_',' ', $task->task_type) }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4">{{ $task->customer->name ?? '-' }}</td>
+                                <td class="px-4 py-4">{{ $task->asset->name ?? '-' }}</td>
+                                <td class="px-4 py-4">
+                                    <span class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 capitalize">
+                                        {{ str_replace('_',' ', $task->status) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="6" class="px-4 py-10 text-center text-slate-500">No tasks yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-            <!-- MAIN -->
-            <main style="flex:1; padding:28px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                    <div>
-                        <h1 style="margin:0; font-size:30px; font-weight:800; color:#111827;">Dashboard</h1>
-                        <div style="margin-top:6px; color:#6b7280;">Overview of tickets and support activity.</div>
-                    </div>
-
-                    <div style="display:flex; gap:12px;">
-                        <a href="/problem-logs/create" style="background:#111827; color:white; text-decoration:none; padding:12px 16px; border-radius:12px; font-weight:700;">
-                            + New Ticket
-                        </a>
-                    </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="flex justify-between items-center mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="text-[#ff8a00] text-2xl">▣</div>
+                    <h2 class="text-xl font-black">Upcoming PM</h2>
                 </div>
+                <a href="{{ route('preventive-schedules.index') }}" class="text-[#ff8a00] font-bold">View All →</a>
+            </div>
 
-                @php
-                    $openCount = \App\Models\ProblemLog::where('status', 'open')->count();
-                    $progressCount = \App\Models\ProblemLog::where('status', 'in_progress')->count();
-                    $resolvedCount = \App\Models\ProblemLog::where('status', 'closed')->count();
-                    $latestTickets = \App\Models\ProblemLog::latest()->take(10)->get();
-                @endphp
-
-                <!-- SUMMARY CARDS -->
-                <div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:20px; margin-bottom:28px;">
-                    <div style="background:white; border-radius:20px; padding:26px; box-shadow:0 8px 20px rgba(0,0,0,.05);">
-                        <div style="font-size:15px; font-weight:700; color:#111827; margin-bottom:24px;">Open</div>
-                        <div style="font-size:48px; font-weight:900; color:#111827;">{{ $openCount }}</div>
+            <div class="space-y-4">
+                @foreach(\App\Models\PreventiveSchedule::with(['asset','contract'])->where('status','active')->orderBy('next_run_date')->limit(4)->get() as $pm)
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div class="flex gap-3">
+                            <div class="w-12 rounded-xl bg-orange-50 text-center py-2">
+                                <div class="text-xs font-black text-[#ff8a00] uppercase">{{ $pm->next_run_date?->format('M') ?? '-' }}</div>
+                                <div class="text-xl font-black">{{ $pm->next_run_date?->format('d') ?? '-' }}</div>
+                            </div>
+                            <div>
+                                <div class="font-black">{{ $pm->name }}</div>
+                                <div class="text-sm text-slate-500">{{ $pm->asset->name ?? $pm->contract->name ?? '-' }}</div>
+                            </div>
+                        </div>
+                        <div class="text-xs font-bold bg-orange-50 text-[#ff8a00] px-3 py-1 rounded-lg">
+                            Due
+                        </div>
                     </div>
-
-                    <div style="background:white; border-radius:20px; padding:26px; box-shadow:0 8px 20px rgba(0,0,0,.05);">
-                        <div style="font-size:15px; font-weight:700; color:#111827; margin-bottom:24px;">In Progress</div>
-                        <div style="font-size:48px; font-weight:900; color:#111827;">{{ $progressCount }}</div>
-                    </div>
-
-                    <div style="background:white; border-radius:20px; padding:26px; box-shadow:0 8px 20px rgba(0,0,0,.05);">
-                        <div style="font-size:15px; font-weight:700; color:#111827; margin-bottom:24px;">Resolved</div>
-                        <div style="font-size:48px; font-weight:900; color:#111827;">{{ $resolvedCount }}</div>
-                    </div>
-                </div>
-
-                <!-- TICKET TABLE -->
-                <div style="background:white; border-radius:20px; padding:24px; box-shadow:0 8px 20px rgba(0,0,0,.05);">
-                    <div style="font-size:18px; font-weight:800; margin-bottom:18px; color:#111827;">Your Tickets</div>
-
-                    <div style="overflow-x:auto;">
-                        <table style="width:100%; border-collapse:collapse;">
-                            <thead>
-                                <tr>
-                                    <th style="text-align:left; padding:14px 12px; color:#6b7280; font-size:13px; border-bottom:1px solid #e5e7eb;">Ticket ID</th>
-                                    <th style="text-align:left; padding:14px 12px; color:#6b7280; font-size:13px; border-bottom:1px solid #e5e7eb;">Status</th>
-                                    <th style="text-align:left; padding:14px 12px; color:#6b7280; font-size:13px; border-bottom:1px solid #e5e7eb;">Title</th>
-                                    <th style="text-align:left; padding:14px 12px; color:#6b7280; font-size:13px; border-bottom:1px solid #e5e7eb;">Description</th>
-                                    <th style="text-align:left; padding:14px 12px; color:#6b7280; font-size:13px; border-bottom:1px solid #e5e7eb;">Created At</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($latestTickets as $ticket)
-                                    <tr>
-                                        <td style="padding:14px 12px; border-bottom:1px solid #f1f5f9; color:#111827;">{{ $ticket->ticket_number ?? $ticket->id }}</td>
-                                        <td style="padding:14px 12px; border-bottom:1px solid #f1f5f9;">
-                                            @php
-                                                $status = $ticket->status ?? 'open';
-                                                $bg = $status === 'closed' ? '#22c55e' : ($status === 'in_progress' ? '#f59e0b' : '#3b82f6');
-                                                $label = $status === 'closed' ? 'Resolved' : ($status === 'in_progress' ? 'In Progress' : 'Open');
-                                            @endphp
-                                            <span style="display:inline-block; padding:6px 12px; border-radius:999px; background:{{ $bg }}; color:white; font-size:12px; font-weight:700;">
-                                                {{ $label }}
-                                            </span>
-                                        </td>
-                                        <td style="padding:14px 12px; border-bottom:1px solid #f1f5f9; color:#111827; font-weight:600;">
-                                            <a href="/problem-logs/{{ $ticket->id }}" style="color:#111827; text-decoration:none;">
-                                                {{ $ticket->title }}
-                                            </a>
-                                        </td>
-                                        <td style="padding:14px 12px; border-bottom:1px solid #f1f5f9; color:#374151; max-width:420px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                            {{ $ticket->description }}
-                                        </td>
-                                        <td style="padding:14px 12px; border-bottom:1px solid #f1f5f9; color:#374151;">
-                                            {{ optional($ticket->created_at)->format('d M Y, H.i') }}
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" style="padding:18px 12px; color:#6b7280;">No tickets found.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </main>
+                @endforeach
+            </div>
         </div>
     </div>
 </x-app-layout>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ config('app.name', 'SSI Operations Control System') }}</title>
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+
+<body class="font-sans antialiased bg-slate-100">
+    <div class="min-h-screen flex">
+        @include('layouts.partials.sidebar')
+
+        <div class="flex-1 min-w-0">
+            <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+                <div class="h-16 px-6 flex items-center justify-between">
+                    <div>
+                        <div class="text-sm text-slate-500">PT Sinergi Solusi Informatika</div>
+                        <h1 class="text-lg font-bold text-slate-900">
+                            {{ $title ?? 'Operations Control System' }}
+                        </h1>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="text-right hidden sm:block">
+                            <div class="text-sm font-semibold text-slate-800">
+                                {{ Auth::user()->name ?? 'User' }}
+                            </div>
+                            <div class="text-xs text-slate-500">
+                                {{ Auth::user()->email ?? '' }}
+                            </div>
+                        </div>
+
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700">
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </header>
+
+            <main class="p-6">
+                @if (isset($header))
+                    <div class="mb-6">
+                        {{ $header }}
+                    </div>
+                @endif
+
+                {{ $slot ?? '' }}
+
+                @yield('content')
+            </main>
+        </div>
+    </div>
+</body>
+</html>

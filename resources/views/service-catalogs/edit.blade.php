@@ -1,0 +1,1 @@
+<x-app-layout><h1 class="text-2xl font-black mb-6">Edit Service Catalog</h1><div class="bg-white rounded-2xl border p-6"><form method="POST" action="{{ route('service-catalogs.update',$serviceCatalog) }}">@csrf @method('PUT') @include('service-catalogs.form', ['catalog'=>$serviceCatalog])</form></div></x-app-layout>

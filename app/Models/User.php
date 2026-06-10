@@ -13,6 +13,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'role',
+        'customer_id',
         'password',
         'role',
         'is_approved',
@@ -37,4 +39,10 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Company::class);
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(\App\Models\Customer::class);
+    }
+
 }

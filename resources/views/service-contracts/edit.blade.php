@@ -1,0 +1,1 @@
+<x-app-layout><h1 class="text-2xl font-black mb-6">Edit Service Contract</h1><div class="bg-white rounded-2xl border p-6"><form method="POST" action="{{ route('service-contracts.update',$serviceContract) }}">@csrf @method('PUT') @include('service-contracts.form', ['contract'=>$serviceContract])</form></div></x-app-layout>

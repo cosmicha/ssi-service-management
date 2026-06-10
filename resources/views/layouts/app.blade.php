@@ -1,57 +1,72 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Service Management</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+<body class="font-sans antialiased bg-[#fbfaf8] text-[#111827]">
+@php
+    $setting = \App\Models\AppSetting::current();
+    $setting->app_name = 'Service Management';
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    $currentCustomer = null;
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
+    if (Auth::check() && isset(Auth::user()->customer_id)) {
+        $currentCustomer = \App\Models\Customer::find(Auth::user()->customer_id);
+    }
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
+    $isCustomerUser = Auth::check() && (Auth::user()->role ?? '') === 'customer';
+
+    $displayCompany = $isCustomerUser && $currentCustomer
+        ? $currentCustomer->name
+        : $setting->company_name;
+
+    $displayAppName = $isCustomerUser ? 'Service Portal' : 'Service Management';
+
+    $displayLogo = $isCustomerUser && $currentCustomer && $currentCustomer->logo_path
+        ? $currentCustomer->logo_path
+        : $setting->logo_path;
+@endphp
+
+<div class="min-h-screen flex">
+    @include('layouts.partials.sidebar')
+
+    <div class="flex-1 min-w-0">
+        <header class="h-[112px] bg-white border-b border-slate-200 px-10 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                @if($displayLogo)
+                    <img src="{{ asset('storage/' . $displayLogo) }}" class="h-14 max-w-[180px] object-contain">
+                @else
+                    <div class="h-14 w-14 rounded-2xl bg-[#ff8a00] flex items-center justify-center font-black text-black text-xl">
+                        SSI
                     </div>
-                </header>
-            @endisset
+                @endif
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
-        </div>
-    
-<div style="position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:999;">
-    <a href="/devices" style="background:#2563eb;color:white;padding:10px 14px;border-radius:12px;text-decoration:none;font-weight:700;box-shadow:0 8px 20px rgba(37,99,235,.25);">Devices</a>
-    <a href="/vendors" style="background:#0f172a;color:white;padding:10px 14px;border-radius:12px;text-decoration:none;font-weight:700;box-shadow:0 8px 20px rgba(15,23,42,.25);">Vendors</a>
+                <div>
+                    <div class="text-sm font-medium text-slate-500 leading-tight">{{ $displayCompany }}</div>
+                    <div class="text-2xl font-black text-slate-950 leading-tight">{{ $displayAppName }}</div>
+                </div>
+            </div>
+
+            <div class="hidden md:flex items-center gap-4 border-l border-slate-200 pl-8">
+                <div class="h-11 w-11 rounded-xl bg-[#ff8a00] flex items-center justify-center text-black font-black">
+                    {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500">Welcome back,</div>
+                    <div class="font-black text-slate-900">{{ Auth::user()->name ?? 'Service Management' }}</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="p-8">
+            {{ $slot ?? '' }}
+            @yield('content')
+        </main>
+    </div>
 </div>
-
-
-<div style="position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:9999;">
-    <a href="/devices" style="background:#2563eb;color:white;padding:12px 16px;border-radius:12px;text-decoration:none;font-weight:700;box-shadow:0 8px 20px rgba(37,99,235,.3);">
-        Devices
-    </a>
-
-    <a href="/vendors" style="background:#0f172a;color:white;padding:12px 16px;border-radius:12px;text-decoration:none;font-weight:700;box-shadow:0 8px 20px rgba(15,23,42,.3);">
-        Vendors
-    </a>
-
-    <a href="/problem-logs" style="background:#16a34a;color:white;padding:12px 16px;border-radius:12px;text-decoration:none;font-weight:700;box-shadow:0 8px 20px rgba(22,163,74,.3);">
-        Tickets
-    </a>
-</div>
-
 </body>
 </html>
