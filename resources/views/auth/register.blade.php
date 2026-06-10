@@ -1,247 +1,154 @@
+@php
+    $setting = \App\Models\AppSetting::current();
+@endphp
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Xion1</title>
+    <title>Create Account - {{ $setting->app_name }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        body {
-            margin: 0;
-            font-family: Inter, Arial, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background:
-                radial-gradient(circle at top left, rgba(37, 99, 235, 0.25), transparent 35%),
-                radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.18), transparent 35%),
-                linear-gradient(135deg, #020617, #0f172a 45%, #1e3a8a 100%);
-            color: white;
-        }
-
-        .shell {
-            width: 100%;
-            max-width: 1120px;
-            display: grid;
-            grid-template-columns: 1.05fr 0.95fr;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 28px;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.30);
-        }
-
-        .left {
-            padding: 56px 48px;
-            background: linear-gradient(135deg, rgba(15,23,42,0.88), rgba(30,58,138,0.72));
-        }
-
-        .brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.82);
-            margin-bottom: 28px;
-        }
-
-        .brand-mark {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #60a5fa, #22d3ee);
-            color: #020617;
-            font-weight: 900;
-            box-shadow: 0 0 24px rgba(96,165,250,0.35);
-        }
-
-        .left h1 {
-            margin: 0 0 14px;
-            font-size: 38px;
-            line-height: 1.08;
-        }
-
-        .left p {
-            margin: 0;
-            color: rgba(255,255,255,0.76);
-            line-height: 1.7;
-            max-width: 500px;
-            font-size: 15px;
-        }
-
-        .feature-box {
-            margin-top: 28px;
-            padding: 18px 20px;
-            border-radius: 18px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.82);
-            font-size: 14px;
-            line-height: 1.7;
-        }
-
-        .right {
-            padding: 48px 42px;
-            background: rgba(255,255,255,0.96);
-            color: #0f172a;
-            display: flex;
-            align-items: center;
-        }
-
-        .form-wrap {
-            width: 100%;
-        }
-
-        .form-wrap h2 {
-            margin: 0 0 8px;
-            font-size: 28px;
-            color: #0f172a;
-        }
-
-        .sub {
-            margin-bottom: 24px;
-            color: #64748b;
-            font-size: 14px;
-        }
-
-        .label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            color: #334155;
-        }
-
-        .input {
-            width: 100%;
-            padding: 13px 14px;
-            border-radius: 14px;
-            border: 1px solid #cbd5e1;
-            outline: none;
-            font-size: 14px;
-            margin-bottom: 16px;
-            background: white;
-        }
-
-        .input:focus {
-            border-color: #60a5fa;
-            box-shadow: 0 0 0 4px rgba(96,165,250,0.16);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 14px 18px;
-            border: none;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 12px 24px rgba(37,99,235,0.24);
-            margin-top: 4px;
-        }
-
-        .login-box {
-            margin-top: 18px;
-            text-align: center;
-            color: #64748b;
-            font-size: 14px;
-        }
-
-        .link {
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .error {
-            margin-bottom: 16px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #b91c1c;
-            font-size: 14px;
-        }
-
-        @media (max-width: 900px) {
-            .shell {
-                grid-template-columns: 1fr;
-                max-width: 560px;
-            }
-
-            .left, .right {
-                padding: 32px 24px;
-            }
-
-            .left h1 {
-                font-size: 30px;
-            }
-        }
-    </style>
 </head>
-<body>
-    <div class="shell">
-        <div class="left">
-            <div class="brand">
-                <span class="brand-mark">X1</span>
-                Xion1 Portal
-            </div>
 
-            <h1>Create your customer access</h1>
-            <p>
+<body class="min-h-screen bg-[#f7f4ef] flex items-center justify-center p-8">
+
+<div class="w-full max-w-6xl bg-white rounded-[2rem] overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-2">
+
+    <div class="relative bg-white p-12 flex flex-col justify-center min-h-[560px] border-r border-slate-100 overflow-hidden">
+        <div class="relative z-10 flex items-center gap-6">
+            @if($setting->logo_path)
+                <div class="h-28 w-28 rounded-2xl bg-white shadow-xl border border-slate-100 flex items-center justify-center p-4">
+                    <img src="{{ asset('storage/' . $setting->logo_path) }}" class="max-h-full max-w-full object-contain">
+                </div>
+            @else
+                <div class="h-28 w-28 rounded-2xl bg-[#ff8a00] shadow-xl flex items-center justify-center text-black font-black text-3xl">
+                    SSI
+                </div>
+            @endif
+
+            <div>
+                <h1 class="text-2xl font-black text-slate-950">
+                    {{ $setting->company_name }}
+                </h1>
+                <p class="mt-2 text-[#ff7a00] text-2xl font-black italic">
+                    {{ $setting->app_name }}
+                </p>
+            </div>
+        </div>
+
+        <div class="relative z-10 mt-10">
+            <h2 class="text-3xl font-black text-slate-950 mb-4">
+                Create your account
+            </h2>
+
+            <p class="text-lg leading-relaxed text-slate-600 max-w-xl">
                 Register to submit incidents, track ticket progress, and access your company dashboard after approval.
             </p>
 
-            <div class="feature-box">
-                New accounts require admin approval before they can access the full portal.
-            </div>
-        </div>
-
-        <div class="right">
-            <div class="form-wrap">
-                <h2>Create account</h2>
-                <div class="sub">Register your access for the Xion1 support portal.</div>
-
-                @if ($errors->any())
-                    <div class="error">
-                        {{ $errors->first() }}
-                    </div>
-                @endif
-
-                <form method="POST" action="{{ route('register') }}">
-                    @csrf
-
-                    <label class="label">Full Name</label>
-                    <input class="input" type="text" name="name" value="{{ old('name') }}" required autofocus>
-
-                    <label class="label">Email</label>
-                    <input class="input" type="email" name="email" value="{{ old('email') }}" required>
-
-                    <label class="label">Password</label>
-                    <input class="input" type="password" name="password" required>
-
-                    <label class="label">Confirm Password</label>
-                    <input class="input" type="password" name="password_confirmation" required>
-
-                    <button class="btn" type="submit">Create Account</button>
-                </form>
-
-                <div class="login-box">
-                    Already have an account?
-                    <a class="link" href="{{ route('login') }}">Login here</a>
+            <div class="mt-8 rounded-2xl border border-orange-100 bg-orange-50/40 p-6 flex gap-5 items-center max-w-xl">
+                <div class="h-16 w-16 rounded-2xl bg-[#ff8a00] flex items-center justify-center text-white text-3xl font-black shrink-0">
+                    ✓
+                </div>
+                <div>
+                    <div class="font-black text-slate-950 text-lg">Admin approval required</div>
+                    <p class="text-slate-600 mt-1">
+                        New accounts require admin approval before they can access the full portal.
+                    </p>
                 </div>
             </div>
         </div>
+
+        <div class="absolute -bottom-28 -left-16 w-[420px] h-[180px] bg-[#ff8a00] rounded-tr-[10rem]"></div>
     </div>
+
+    <div class="p-10 lg:p-12 flex flex-col justify-center bg-white">
+        <h2 class="text-4xl font-black text-slate-950 mb-3">Create account</h2>
+        <p class="text-slate-500 text-lg mb-10">
+            Register your access for the {{ $setting->app_name }} portal.
+        </p>
+
+        <form method="POST" action="{{ route('register') }}" class="space-y-6">
+            @csrf
+
+            <div>
+                <label class="block text-sm font-black text-slate-950 mb-2">Full Name</label>
+                <input
+                    type="text"
+                    name="name"
+                    value="{{ old('name') }}"
+                    required
+                    autofocus
+                    autocomplete="name"
+                    placeholder="Enter your full name"
+                    class="w-full rounded-2xl border-slate-300 text-lg px-6 py-4 focus:border-[#ff8a00] focus:ring-[#ff8a00]"
+                >
+                @error('name')
+                    <div class="text-red-600 text-sm mt-2">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-black text-slate-950 mb-2">Email</label>
+                <input
+                    type="email"
+                    name="email"
+                    value="{{ old('email') }}"
+                    required
+                    autocomplete="username"
+                    placeholder="Enter your email address"
+                    class="w-full rounded-2xl border-slate-300 text-lg px-6 py-4 focus:border-[#ff8a00] focus:ring-[#ff8a00]"
+                >
+                @error('email')
+                    <div class="text-red-600 text-sm mt-2">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-black text-slate-950 mb-2">Password</label>
+                <input
+                    type="password"
+                    name="password"
+                    required
+                    autocomplete="new-password"
+                    placeholder="Create a password"
+                    class="w-full rounded-2xl border-slate-300 text-lg px-6 py-4 focus:border-[#ff8a00] focus:ring-[#ff8a00]"
+                >
+                @error('password')
+                    <div class="text-red-600 text-sm mt-2">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-black text-slate-950 mb-2">Confirm Password</label>
+                <input
+                    type="password"
+                    name="password_confirmation"
+                    required
+                    autocomplete="new-password"
+                    placeholder="Confirm your password"
+                    class="w-full rounded-2xl border-slate-300 text-lg px-6 py-4 focus:border-[#ff8a00] focus:ring-[#ff8a00]"
+                >
+                @error('password_confirmation')
+                    <div class="text-red-600 text-sm mt-2">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <button
+                type="submit"
+                class="w-full rounded-2xl bg-[#ff7a00] hover:bg-[#ff8a00] text-white text-lg font-black py-5 shadow-xl shadow-orange-200 transition">
+                Create Account
+            </button>
+
+            <div class="text-center text-slate-500">
+                Already have an account?
+                <a href="{{ route('login') }}" class="font-black text-[#ff7a00] hover:underline">
+                    Login here
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
 </body>
 </html>

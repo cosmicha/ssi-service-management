@@ -28,7 +28,7 @@ use App\Http\Controllers\PreventiveExecutionController;
 use App\Http\Controllers\AccountController;
 
 Route::get('/', function () {
-    return redirect('/dashboard');
+    return redirect()->secure('/dashboard');
 });
 
 Route::get('/dashboard', function () {

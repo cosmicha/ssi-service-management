@@ -5,7 +5,7 @@
     $customer = Auth::user()->customer ?? null;
 @endphp
 
-<aside class="w-[280px] bg-black text-white min-h-screen flex flex-col">
+<aside class="w-[280px] shrink-0 bg-black text-white h-screen min-h-screen flex flex-col overflow-hidden">
     <div class="px-6 py-7 border-b border-white/10">
         <div class="flex items-center gap-3">
             @if($isCustomer && $customer?->logo_path)
@@ -29,7 +29,7 @@
         </div>
     </div>
 
-    <nav class="flex-1 px-4 py-6 space-y-2">
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto bg-black">
         @if($isCustomer)
             <a href="/customer-portal" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold {{ request()->is('customer-portal') ? 'bg-[#ff8a00] text-white' : 'hover:bg-[#ff8a00] hover:text-black' }}">
                 <span class="text-lg">▦</span> My Dashboard
@@ -105,16 +105,16 @@
         @endif
     </nav>
 
-    <div class="px-4 py-6 border-t border-white/10 space-y-2">
+    <div class="shrink-0 px-4 py-5 border-t border-white/10 space-y-2 bg-black">
         @if($role === 'admin')
-            <a href="/settings/branding" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold hover:bg-[#ff8a00] hover:text-black">
+            <a href="/settings/branding" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-white hover:bg-[#ff8a00] hover:text-black">
                 <span class="text-lg">⚙</span> Branding
             </a>
         @endif
 
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold hover:bg-[#ff8a00] hover:text-black">
+            <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-white hover:bg-[#ff8a00] hover:text-black">
                 <span class="text-lg">↪</span> Logout
             </button>
         </form>

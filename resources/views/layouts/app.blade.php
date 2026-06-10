@@ -7,6 +7,24 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
+@php
+    $roleGuardUser = Auth::user();
+    if ($roleGuardUser) {
+        $roleGuard = $roleGuardUser->role ?? 'admin';
+        $currentPath = trim(request()->path(), '/');
+
+        if (in_array($roleGuard, ['customer', 'customer_admin']) && !str_starts_with($currentPath, 'customer-portal')) {
+            header('Location: /customer-portal');
+            exit;
+        }
+
+        if ($roleGuard === 'engineer' && !($currentPath === 'engineer' || str_starts_with($currentPath, 'tasks'))) {
+            header('Location: /engineer');
+            exit;
+        }
+    }
+@endphp
+
 <body class="font-sans antialiased bg-[#fbfaf8] text-[#111827]">
 @php
     $setting = \App\Models\AppSetting::current();
