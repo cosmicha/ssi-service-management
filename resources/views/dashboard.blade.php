@@ -52,7 +52,7 @@
             <div class="font-black text-sm">Tasks</div>
         </a>
 
-        <a href="#" class="group bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition">
+        <a href="{{ route('reports.index') }}" class="group bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition">
             <div class="text-2xl text-[#ff8a00] mb-2">▥</div>
             <div class="font-black text-sm">Reports</div>
         </a>
