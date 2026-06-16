@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\ImportCenterController;
 use App\Http\Controllers\TaskPhotoController;
@@ -140,6 +141,18 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth','admin.only'])->get('/admin', function () {
     return view('admin.index');
 })->name('admin.dashboard');
+
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/incidents', [ReportController::class, 'incidents'])->name('reports.incidents');
+    Route::get('/reports/changes', [ReportController::class, 'changes'])->name('reports.changes');
+    Route::get('/reports/preventive', [ReportController::class, 'preventive'])->name('reports.preventive');
+    Route::get('/reports/assets', [ReportController::class, 'assets'])->name('reports.assets');
+    Route::get('/reports/customers', [ReportController::class, 'customers'])->name('reports.customers');
+    Route::get('/reports/export/{type}', [ReportController::class, 'export'])->name('reports.export');
+});
 
 
 require __DIR__.'/auth.php';

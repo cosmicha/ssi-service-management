@@ -39,4 +39,19 @@ class Customer extends Model
         return $this->hasMany(\App\Models\CustomerSla::class);
     }
 
+    public function assets()
+    {
+        return $this->hasMany(\App\Models\Asset::class);
+    }
+
+    public function incidents()
+    {
+        return $this->hasMany(\App\Models\Incident::class);
+    }
+
+    public function changeRequests()
+    {
+        return $this->hasMany(\App\Models\ChangeRequest::class);
+    }
+
 }

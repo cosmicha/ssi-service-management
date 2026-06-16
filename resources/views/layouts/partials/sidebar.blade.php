@@ -152,6 +152,12 @@
     </a>
 @endif
 
+
+<a href="{{ route('reports.index') }}"
+   class="block px-4 py-3 rounded-2xl font-bold {{ request()->is('reports*') ? 'bg-[#ff8a00] text-black' : 'text-slate-600 hover:bg-slate-100' }}">
+    Reports
+</a>
+
 </nav>
 
     <div class="shrink-0 px-4 py-5 border-t border-white/10 space-y-2 bg-black">
