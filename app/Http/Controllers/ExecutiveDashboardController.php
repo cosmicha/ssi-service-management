@@ -3,210 +3,134 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
+use App\Models\ChangeRequest;
 use App\Models\Customer;
 use App\Models\Incident;
-use App\Models\Task;
 use App\Models\InventoryItem;
 use App\Models\PreventiveExecution;
-use Illuminate\Support\Facades\DB;
+use App\Models\Task;
+use Carbon\Carbon;
 
 class ExecutiveDashboardController extends Controller
 {
     public function index()
     {
-        $customerId = request('customer_id');
+        $now = now();
+        $monthStart = $now->copy()->startOfMonth();
 
-        $customers =
-            Customer::orderBy('name')
-                ->get();
+        $totalCustomers = Customer::count();
+        $totalAssets = Asset::count();
 
-        $user = auth()->user();
+        $openIncidents = Incident::whereIn('status', ['open', 'assigned'])->count();
 
-        $assetQuery =
-            Asset::visibleTo($user);
+        $criticalIncidents = Incident::where('severity', 'critical')
+            ->whereIn('status', ['open', 'assigned'])
+            ->count();
 
-        $incidentQuery =
-            Incident::visibleTo($user);
+        $openChanges = ChangeRequest::whereIn('status', ['open', 'assigned'])->count();
 
-        $taskQuery =
-            Task::visibleTo($user);
-
-        if ($customerId) {
-            $assetQuery->where('customer_id', $customerId);
-            $incidentQuery->where('customer_id', $customerId);
-            $taskQuery->where('customer_id', $customerId);
-        }
-
-        $assets = (clone $assetQuery)->count();
-
-        $openIncidents =
-            (clone $incidentQuery)
-                ->whereNotIn(
-                    'status',
-                    ['resolved','closed']
-                )->count();
-
-        $openTasks =
-            (clone $taskQuery)
-                ->whereNotIn(
-                    'status',
-                    ['completed','closed']
-                )->count();
+        $openTasks = Task::whereNotIn('status', ['completed', 'closed', 'cancelled'])->count();
 
         $pmTotal = PreventiveExecution::count();
 
-        $pmDone =
-            PreventiveExecution::where(
-                'status',
-                'completed'
-            )->count();
+        $pmDone = PreventiveExecution::whereIn('status', ['done', 'completed'])->count();
 
-        $pmCompliance =
-            $pmTotal > 0
-                ? round(($pmDone / $pmTotal) * 100, 1)
-                : 100;
-
-        $totalIncidents =
-            (clone $incidentQuery)->count();
-
-        $slaAchievement =
-            $totalIncidents
-            ? round(
-                (
-                    clone $incidentQuery
-                )->where(
-                    'resolution_sla_status',
-                    'met'
-                )->count()
-                /
-                $totalIncidents
-                * 100,
-                1
-            )
+        $pmCompliance = $pmTotal > 0
+            ? round(($pmDone / $pmTotal) * 100, 1)
             : 100;
 
-        $inventoryValue = 0;
+        $incidentTotal = Incident::count();
 
-        $incidentTrend =
-            (clone $incidentQuery)->selectRaw("strftime('%m', created_at) as month, count(*) as total")
-                ->groupBy('month')
-                ->orderBy('month')
-                ->get();
+        $slaMet = Incident::where(function ($q) {
+                $q->where('resolution_sla_status', 'met')
+                  ->orWhere('sla_status', 'on_track');
+            })
+            ->count();
 
-        $incidentCategory =
-            (clone $incidentQuery)->with('category')
-                ->get()
-                ->groupBy(fn($incident) => $incident->category?->name ?? 'Uncategorized')
-                ->map(fn($items) => $items->count());
+        $slaCompliance = $incidentTotal > 0
+            ? round(($slaMet / $incidentTotal) * 100, 1)
+            : 100;
 
-        $topAssets =
-            (clone $incidentQuery)->with('asset')
-                ->whereNotNull('asset_id')
-                ->get()
-                ->groupBy(fn($incident) => $incident->asset?->name ?? 'Unknown Asset')
-                ->map(fn($items) => $items->count())
-                ->sortDesc()
-                ->take(5);
+        $lowStock = class_exists(InventoryItem::class)
+            ? InventoryItem::get()->filter(fn ($item) => method_exists($item, 'currentStock')
+                ? $item->currentStock() <= ($item->minimum_stock ?? 0)
+                : (($item->quantity ?? 0) <= ($item->minimum_stock ?? 0))
+            )->count()
+            : 0;
 
-        $engineerPerformance =
-            (clone $taskQuery)->with('assignee')
-                ->whereNotNull('assigned_to')
-                ->get()
-                ->groupBy(fn($task) => $task->assignee?->name ?? 'Unassigned')
-                ->map(function ($tasks) {
-                    $total = $tasks->count();
-                    $completed = $tasks->where('status', 'completed')->count();
-
-                    return $total > 0
-                        ? round(($completed / $total) * 100, 1)
-                        : 0;
-                })
-                ->sortDesc()
-                ->take(5);
-
-        
-        $criticalIncidents =
-            (clone $incidentQuery)->with([
-                'customer',
-                'branch',
-                'asset'
-            ])
-            ->whereIn('severity', ['high','critical'])
-            ->whereNotIn('status', ['resolved','closed'])
-            ->latest()
-            ->take(10)
+        $incidentTrend = Incident::selectRaw("strftime('%Y-%m', created_at) as period, count(*) as total")
+            ->where('created_at', '>=', $now->copy()->subMonths(6))
+            ->groupBy('period')
+            ->orderBy('period')
             ->get();
 
+        $incidentCategory = Incident::with('category')
+            ->get()
+            ->groupBy(fn ($incident) => $incident->category?->name ?? ucfirst($incident->category ?? 'Uncategorized'))
+            ->map(fn ($items) => $items->count())
+            ->sortDesc()
+            ->take(6);
 
-        $mttaMinutes =
-            Incident::whereNotNull('reported_at')
-                ->whereNotNull('responded_at')
-                ->get()
-                ->avg(fn($i) =>
-                    $i->reported_at->diffInMinutes($i->responded_at)
-                ) ?? 0;
+        $topCustomers = Incident::with('customer')
+            ->get()
+            ->groupBy(fn ($incident) => $incident->customer?->name ?? 'Unknown Customer')
+            ->map(fn ($items) => $items->count())
+            ->sortDesc()
+            ->take(8);
 
-        $mttrMinutes =
-            Incident::whereNotNull('reported_at')
-                ->whereNotNull('resolved_at')
-                ->get()
-                ->avg(fn($i) =>
-                    $i->reported_at->diffInMinutes($i->resolved_at)
-                ) ?? 0;
+        $engineerPerformance = Task::with('assignee')
+            ->whereNotNull('assigned_to')
+            ->get()
+            ->groupBy(fn ($task) => $task->assignee?->name ?? 'Unassigned')
+            ->map(function ($tasks) {
+                $total = $tasks->count();
+                $completed = $tasks->whereIn('status', ['completed', 'closed'])->count();
 
-        $mtta =
-            $mttaMinutes >= 60
-                ? round($mttaMinutes / 60, 1) . 'h'
-                : round($mttaMinutes) . 'm';
+                return [
+                    'total' => $total,
+                    'completed' => $completed,
+                    'rate' => $total > 0 ? round(($completed / $total) * 100, 1) : 0,
+                ];
+            })
+            ->sortByDesc('total')
+            ->take(8);
 
-        $mttr =
-            $mttrMinutes >= 60
-                ? round($mttrMinutes / 60, 1) . 'h'
-                : round($mttrMinutes) . 'm';
+        $criticalOpenIncidents = Incident::with(['customer', 'branch'])
+            ->whereIn('status', ['open', 'assigned'])
+            ->whereIn('severity', ['critical', 'high'])
+            ->latest()
+            ->limit(8)
+            ->get();
 
+        $upcomingPm = PreventiveExecution::with(['task.customer', 'task.branch', 'engineer', 'preventiveSchedule'])
+            ->whereIn('status', ['not_done', 'document_on_progress', 'pending', 'in_progress'])
+            ->latest()
+            ->limit(8)
+            ->get();
 
-        $customerRanking =
-            (clone $incidentQuery)->with('customer')
-                ->get()
-                ->groupBy(fn($incident) =>
-                    $incident->customer?->name ?? 'Unknown Customer'
-                )
-                ->map(fn($items) => $items->count())
-                ->sortDesc()
-                ->take(5);
+        $monthlyIncidents = Incident::where('created_at', '>=', $monthStart)->count();
+        $monthlyResolved = Incident::whereIn('status', ['resolved', 'closed'])
+            ->where('updated_at', '>=', $monthStart)
+            ->count();
 
-        $branchRanking =
-            (clone $incidentQuery)->with('branch')
-                ->get()
-                ->groupBy(fn($incident) =>
-                    $incident->branch?->name ?? 'Unknown Site'
-                )
-                ->map(fn($items) => $items->count())
-                ->sortDesc()
-                ->take(5);
-
-
-return view(
-            'executive.dashboard',
-            compact(
-                'assets',
-                'openIncidents',
-                'openTasks',
-                'pmCompliance',
-                'slaAchievement',
-                'inventoryValue',
-                'incidentTrend',
-                'incidentCategory',
-                'topAssets',
-                'engineerPerformance',
-                'criticalIncidents',
-                'mtta',
-                'mttr',
-                'customerRanking',
-                'branchRanking',
-                'customers',
-                'customerId'
-            )
-        );
+        return view('executive.dashboard', compact(
+            'totalCustomers',
+            'totalAssets',
+            'openIncidents',
+            'criticalIncidents',
+            'openChanges',
+            'openTasks',
+            'pmCompliance',
+            'slaCompliance',
+            'lowStock',
+            'incidentTrend',
+            'incidentCategory',
+            'topCustomers',
+            'engineerPerformance',
+            'criticalOpenIncidents',
+            'upcomingPm',
+            'monthlyIncidents',
+            'monthlyResolved'
+        ));
     }
 }
