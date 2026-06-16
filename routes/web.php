@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\WorkOrderPdfController;
+use App\Http\Controllers\QrAssetController;
+use App\Http\Controllers\EngineerMobileController;
+use App\Http\Controllers\CustomerPortalV2Controller;
+
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\ImportCenterController;
@@ -43,6 +48,16 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
+    $user = auth()->user();
+
+    if ($user && in_array($user->role, ['customer', 'customer_admin', 'customer_user'])) {
+        return redirect()->route('customer.v2.dashboard');
+    }
+
+    if ($user && in_array($user->role, ['engineer', 'technician'])) {
+        return redirect()->route('engineer.mobile.index');
+    }
+
     return view('dashboard', [
         'openTasks' => \App\Models\Task::whereNotIn('status', ['completed','cancelled'])->count(),
         'openIncidents' => \App\Models\Incident::whereNotIn('status', ['resolved','closed'])->count(),
@@ -153,6 +168,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/customers', [ReportController::class, 'customers'])->name('reports.customers');
     Route::get('/reports/export/{type}', [ReportController::class, 'export'])->name('reports.export');
 });
+
+
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/tasks/{task}/work-order-pdf', [WorkOrderPdfController::class, 'show'])->name('tasks.work_order_pdf');
+
+    Route::get('/engineer/mobile', [EngineerMobileController::class, 'index'])->name('engineer.mobile.index');
+    Route::post('/engineer/mobile/tasks/{task}', [EngineerMobileController::class, 'updateTask'])->name('engineer.mobile.tasks.update');
+
+    Route::get('/customer-v2', [CustomerPortalV2Controller::class, 'dashboard'])->name('customer.v2.dashboard');
+    Route::get('/customer-v2/assets', [CustomerPortalV2Controller::class, 'assets'])->name('customer.v2.assets');
+    Route::get('/customer-v2/tickets', [CustomerPortalV2Controller::class, 'tickets'])->name('customer.v2.tickets');
+});
+
+Route::get('/asset-qr/{qr}', [QrAssetController::class, 'show'])->name('assets.qr.show');
 
 
 require __DIR__.'/auth.php';

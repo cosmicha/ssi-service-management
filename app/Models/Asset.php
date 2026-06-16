@@ -86,4 +86,14 @@ class Asset extends Model
         );
     }
 
+    public function incidents()
+    {
+        return $this->hasMany(\App\Models\Incident::class);
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(\App\Models\Task::class);
+    }
+
 }

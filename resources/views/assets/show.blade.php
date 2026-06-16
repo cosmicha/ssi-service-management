@@ -1,3 +1,9 @@
+
+<a href="{{ route('assets.qr.show', $asset->qr_uuid ?? $asset->id) }}" target="_blank"
+   class="inline-flex items-center px-4 py-2 rounded-xl bg-[#ff8a00] text-black font-black">
+    Open QR Asset Portal
+</a>
+
 <x-app-layout>
 
 @php

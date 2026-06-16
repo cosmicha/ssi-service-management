@@ -35,6 +35,16 @@ class AuthenticatedSessionController extends Controller
             return redirect('/engineer');
         }
 
+        $user = auth()->user();
+
+        if ($user && in_array($user->role, ['customer', 'customer_admin', 'customer_user'])) {
+            return redirect()->route('customer.v2.dashboard');
+        }
+
+        if ($user && in_array($user->role, ['engineer', 'technician'])) {
+            return redirect()->route('engineer.mobile.index');
+        }
+
         return redirect('/dashboard');
     }
 

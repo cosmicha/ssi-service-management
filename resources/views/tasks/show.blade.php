@@ -1,3 +1,9 @@
+
+<a href="{{ route('tasks.work_order_pdf', $task) }}" target="_blank"
+   class="inline-flex items-center px-4 py-2 rounded-xl bg-slate-900 text-white font-black">
+    Work Order PDF
+</a>
+
 <x-app-layout>
     <div class="mb-6 flex items-start justify-between">
         <div>

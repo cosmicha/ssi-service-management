@@ -164,6 +164,17 @@
     Executive Dashboard
 </a>
 
+
+<a href="{{ route('engineer.mobile.index') }}"
+   class="block px-4 py-3 rounded-2xl font-bold {{ request()->is('engineer/mobile*') ? 'bg-[#ff8a00] text-black' : 'text-slate-600 hover:bg-slate-100' }}">
+    Engineer Mobile
+</a>
+
+<a href="{{ route('customer.v2.dashboard') }}"
+   class="block px-4 py-3 rounded-2xl font-bold {{ request()->is('customer-v2*') ? 'bg-[#ff8a00] text-black' : 'text-slate-600 hover:bg-slate-100' }}">
+    Customer Portal v2
+</a>
+
 </nav>
 
     <div class="shrink-0 px-4 py-5 border-t border-white/10 space-y-2 bg-black">
