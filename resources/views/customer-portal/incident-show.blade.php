@@ -42,6 +42,66 @@
     </div>
 </div>
 
+
+<div class="bg-white rounded-2xl border p-6 mb-6">
+    <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+            <h2 class="font-black">SLA Timeline</h2>
+            <p class="text-sm text-slate-500">Service level visibility for this ticket.</p>
+        </div>
+
+        @php
+            $slaColor = match($incident->sla_status ?? 'no_sla') {
+                'met' => 'bg-green-100 text-green-700',
+                'near_breach' => 'bg-yellow-100 text-yellow-700',
+                'breached' => 'bg-red-100 text-red-700',
+                'on_track' => 'bg-blue-100 text-blue-700',
+                default => 'bg-slate-100 text-slate-600',
+            };
+        @endphp
+
+        <span class="px-4 py-2 rounded-full text-xs font-black {{ $slaColor }}">
+            {{ strtoupper(str_replace('_',' ', $incident->sla_status ?? 'NO SLA')) }}
+        </span>
+    </div>
+
+    @if($incident->sla_status === 'near_breach')
+        <div class="mb-5 p-4 rounded-2xl bg-yellow-50 border border-yellow-200 text-yellow-800 font-bold">
+            ⚠ This ticket is approaching SLA breach.
+        </div>
+    @endif
+
+    @if($incident->sla_status === 'breached')
+        <div class="mb-5 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 font-bold">
+            🚨 SLA has been breached.
+        </div>
+    @endif
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="rounded-xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">Response Due</div>
+            <div class="font-black mt-1">{{ $incident->response_due_at?->format('d M Y H:i') ?? '-' }}</div>
+            <div class="text-xs mt-1 capitalize text-slate-500">{{ str_replace('_',' ', $incident->response_sla_status ?? 'no_sla') }}</div>
+        </div>
+
+        <div class="rounded-xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">Responded At</div>
+            <div class="font-black mt-1">{{ $incident->responded_at?->format('d M Y H:i') ?? '-' }}</div>
+        </div>
+
+        <div class="rounded-xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">Resolution Due</div>
+            <div class="font-black mt-1">{{ $incident->resolution_due_at?->format('d M Y H:i') ?? '-' }}</div>
+            <div class="text-xs mt-1 capitalize text-slate-500">{{ str_replace('_',' ', $incident->resolution_sla_status ?? 'no_sla') }}</div>
+        </div>
+
+        <div class="rounded-xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">Resolved At</div>
+            <div class="font-black mt-1">{{ $incident->resolved_at?->format('d M Y H:i') ?? '-' }}</div>
+        </div>
+    </div>
+</div>
+
 <div class="bg-white rounded-2xl border p-6 mb-6">
     <h2 class="font-black mb-4">Ticket Details</h2>
 

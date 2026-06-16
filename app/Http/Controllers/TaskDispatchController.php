@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
+use App\Services\SlaService;
 
 class TaskDispatchController extends Controller
 {
@@ -85,6 +86,17 @@ class TaskDispatchController extends Controller
         }
 
         $task->update($payload);
+        $task->refresh();
+
+        if ($task->incident) {
+            if (in_array($action, ['dispatch', 'start_travel', 'arrive', 'start_work'])) {
+                app(SlaService::class)->markResponded($task->incident);
+            }
+
+            if ($action === 'complete') {
+                app(SlaService::class)->markResolved($task->incident);
+            }
+        }
 
         if ($log) {
             $task->workLogs()->create([

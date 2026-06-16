@@ -65,8 +65,20 @@
                 <span class="text-lg">▦</span> Dashboard
             </a>
 
+            <a 
+            <a href="/my-work"
+               class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold {{ request()->is('my-work*') ? 'bg-[#ff8a00] text-white' : 'hover:bg-[#ff8a00] hover:text-black' }}">
+                <span class="text-lg">🧰</span> My Work
+            </a>
+
             <a href="/tasks" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold {{ request()->is('tasks*') ? 'bg-[#ff8a00] text-white' : 'hover:bg-[#ff8a00] hover:text-black' }}">
                 <span class="text-lg">☑</span> Tasks
+            </a>
+
+            <a 
+            <a href="/sla-dashboard"
+               class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold {{ request()->is('sla-dashboard*') ? 'bg-[#ff8a00] text-white' : 'hover:bg-[#ff8a00] hover:text-black' }}">
+                <span class="text-lg">⏱</span> SLA Dashboard
             </a>
 
             <a href="/incidents" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold {{ request()->is('incidents*') ? 'bg-[#ff8a00] text-white' : 'hover:bg-[#ff8a00] hover:text-black' }}">
@@ -79,6 +91,17 @@
 
             <a href="/preventive-schedules" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold {{ request()->is('preventive-schedules*') ? 'bg-[#ff8a00] text-white' : 'hover:bg-[#ff8a00] hover:text-black' }}">
                 <span class="text-lg">▣</span> Preventive Maintenance
+            </a>
+
+            
+                <a href="/inventory" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold {{ request()->is('inventory-items*') ? 'bg-[#ff8a00] text-white' : 'hover:bg-[#ff8a00] hover:text-black' }}">
+                    <span class="text-lg">📦</span> Inventory Management
+                </a>
+
+                <a 
+            <a href="/warranty"
+               class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold {{ request()->is('warranty*') ? 'bg-[#ff8a00] text-white' : 'hover:bg-[#ff8a00] hover:text-black' }}">
+                <span class="text-lg">🛡</span> Warranty
             </a>
 
             <a href="/assets" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold {{ request()->is('assets*') ? 'bg-[#ff8a00] text-white' : 'hover:bg-[#ff8a00] hover:text-black' }}">

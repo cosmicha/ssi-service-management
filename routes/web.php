@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\TaskPhotoController;
+use App\Http\Controllers\ExecutiveDashboardController;
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerSlaController;
@@ -26,6 +29,11 @@ use App\Http\Controllers\ChangeRequestController;
 use App\Http\Controllers\PreventiveScheduleController;
 use App\Http\Controllers\PreventiveExecutionController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\InventoryCategoryController;
+use App\Http\Controllers\InventoryItemController;
+use App\Http\Controllers\InventoryLocationController;
+use App\Http\Controllers\InventoryTransactionController;
+use App\Http\Controllers\TaskPartUsageController;
 
 Route::get('/', function () {
     return redirect()->secure('/dashboard');
@@ -66,6 +74,48 @@ Route::resource('service-contracts', ServiceContractController::class)->except([
 Route::view('/preventive-maintenance', 'dashboard')->name('preventive-maintenance.index');
 Route::view('/change-requests', 'dashboard')->name('change-requests.index');
 Route::view('/engineer-schedule', 'dashboard')->name('engineer-schedule.index');
+
+
+
+Route::resource('inventory-categories', InventoryCategoryController::class)->except(['show']);
+
+
+Route::get('/inventory', function () {
+
+    return view('inventory.dashboard', [
+
+        'categories' => \App\Models\InventoryCategory::count(),
+
+        'items' => \App\Models\InventoryItem::count(),
+
+        'locations' => \App\Models\InventoryLocation::count(),
+
+        'transactions' => \App\Models\InventoryTransaction::count(),
+
+        'lowStock' =>
+            \App\Models\InventoryItem::get()
+                ->filter(fn($i) =>
+                    $i->currentStock() <= $i->minimum_stock
+                )
+                ->count(),
+
+        'inventoryValue' =>
+            \App\Models\InventoryItem::all()
+                ->sum(function($item){
+                    return
+                        ($item->currentStock() ?? 0)
+                        *
+                        ($item->unit_cost ?? 0);
+                }),
+
+    ]);
+
+})->name('inventory.dashboard');
+
+
+Route::resource('inventory-items', InventoryItemController::class)->except(['show']);
+Route::resource('inventory-locations', InventoryLocationController::class)->except(['show']);
+
 
 require __DIR__.'/auth.php';
 
@@ -472,3 +522,160 @@ Route::get('/customers/{customer}/sla', [CustomerSlaController::class, 'edit'])
 
 Route::put('/customers/{customer}/sla', [CustomerSlaController::class, 'update'])
     ->name('customer-slas.update');
+Route::post('/sla/refresh', function () {
+    \Artisan::call('sla:refresh-incidents', ['--apply-missing' => true]);
+    return back()->with('success', 'SLA status refreshed.');
+})->name('sla.refresh');
+
+Route::resource(
+    'inventory-transactions',
+    InventoryTransactionController::class
+)->except(['show']);
+
+
+
+Route::get('/inventory-stock', function () {
+
+    $items = \App\Models\InventoryItem::with('category')->get();
+    $locations = \App\Models\InventoryLocation::orderBy('name')->get();
+
+    return view('inventory.stock', compact(
+        'items',
+        'locations'
+    ));
+
+})->name('inventory.stock');
+
+
+Route::post(
+    '/tasks/{task}/used-parts',
+    [TaskPartUsageController::class,'store']
+)->name('tasks.used-parts.store');
+
+
+
+Route::get('/warranty', function () {
+
+    $expiring = \App\Models\Asset::whereNotNull('warranty_expiry')
+        ->whereBetween(
+            'warranty_expiry',
+            [now(), now()->addDays(90)]
+        )
+        ->orderBy('warranty_expiry')
+        ->get();
+
+    $expired = \App\Models\Asset::whereNotNull('warranty_expiry')
+        ->where('warranty_expiry', '<', now())
+        ->orderBy('warranty_expiry')
+        ->get();
+
+    return view(
+        'warranty.index',
+        compact(
+            'expiring',
+            'expired'
+        )
+    );
+
+})->name('warranty.index');
+
+
+
+Route::patch('/assets/{asset}/lifecycle', [AssetController::class, 'updateLifecycle'])
+    ->name('assets.lifecycle.update');
+
+
+
+Route::post(
+    '/tasks/{task}/signoff',
+    [TaskController::class,'signoff']
+)->name('tasks.signoff');
+
+
+
+Route::get('/asset-qr/{uuid}', function ($uuid) {
+
+    $asset = \App\Models\Asset::where(
+        'qr_uuid',
+        $uuid
+    )->firstOrFail();
+
+    return redirect()->route(
+        'assets.show',
+        $asset
+    );
+
+})->name('asset.qr');
+
+
+Route::get('/tasks/{task}/pdf', [TaskController::class, 'pdf'])
+    ->name('tasks.pdf');
+
+
+Route::get('/sla-dashboard', function () {
+
+    $incidents = \App\Models\Incident::with(['customer','branch','asset'])
+        ->latest()
+        ->get();
+
+    $total = $incidents->count();
+
+    return view('sla.dashboard', [
+        'total' => $total,
+        'onTrack' => $incidents->where('sla_status', 'on_track')->count(),
+        'nearBreach' => $incidents->where('sla_status', 'near_breach')->count(),
+        'breached' => $incidents->where('sla_status', 'breached')->count(),
+        'met' => $incidents->where('sla_status', 'met')->count(),
+        'noSla' => $incidents->where('sla_status', 'no_sla')->count(),
+        'compliance' => $total > 0
+            ? round(($incidents->where('sla_status', 'met')->count() / max(1, $incidents->whereIn('sla_status', ['met','breached'])->count())) * 100, 1)
+            : 0,
+        'recentBreaches' => $incidents
+            ->where('sla_status', 'breached')
+            ->take(10),
+        'nearBreaches' => $incidents
+            ->where('sla_status', 'near_breach')
+            ->take(10),
+    ]);
+
+})->name('sla.dashboard');
+
+
+
+Route::get('/my-work', function () {
+
+    $tasks = \App\Models\Task::with([
+        'asset',
+        'customer',
+        'branch'
+    ])
+    ->where('assigned_to', auth()->id())
+    ->whereNotIn('status', [
+        'completed',
+        'cancelled'
+    ])
+    ->orderBy('planned_start_at')
+    ->get();
+
+    return view(
+        'mobile.my-work',
+        compact('tasks')
+    );
+
+})->middleware('auth')
+  ->name('mobile.my-work');
+
+
+
+Route::post(
+    '/tasks/{task}/photos',
+    [TaskPhotoController::class,'store']
+)->name('task.photos.store');
+
+
+
+Route::get(
+    '/executive-dashboard',
+    [ExecutiveDashboardController::class, 'index']
+)->name('executive.dashboard');
+

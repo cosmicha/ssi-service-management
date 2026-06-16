@@ -2,20 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;\nuse App\Support\NumberGenerator;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Model;
 
 class PreventiveExecution extends Model
 {
-    protected $fillable = [\n        'pm_no',
+    protected $fillable = [
         'task_id',
         'preventive_schedule_id',
         'engineer_id',
+        'status',
         'started_at',
         'completed_at',
-        'overall_result',
-        'summary',
+        'notes',
+        'result',
     ];
 
     protected $casts = [
@@ -23,25 +22,22 @@ class PreventiveExecution extends Model
         'completed_at' => 'datetime',
     ];
 
-    public function task(): BelongsTo
+    public function task()
     {
         return $this->belongsTo(Task::class);
     }
 
-    public function schedule(): BelongsTo
+    public function preventiveSchedule()
     {
-        return $this->belongsTo(
-            PreventiveSchedule::class,
-            'preventive_schedule_id'
-        );
+        return $this->belongsTo(PreventiveSchedule::class);
     }
 
-    public function engineer(): BelongsTo
+    public function engineer()
     {
         return $this->belongsTo(User::class, 'engineer_id');
     }
 
-    public function items(): HasMany
+    public function items()
     {
         return $this->hasMany(PreventiveExecutionItem::class);
     }

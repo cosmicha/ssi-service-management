@@ -180,4 +180,272 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
+<div class="bg-white rounded-3xl shadow p-6 mt-6">
+
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-black">
+            Used Parts
+        </h2>
+    </div>
+
+    <form method="POST"
+          action="{{ route('tasks.used-parts.store', $task) }}"
+          class="grid md:grid-cols-4 gap-4">
+
+        @csrf
+
+        <select name="inventory_item_id"
+                class="rounded-xl border-slate-300">
+
+            @foreach(\App\Models\InventoryItem::orderBy('name')->get() as $item)
+
+                <option value="{{ $item->id }}">
+                    {{ $item->name }}
+                </option>
+
+            @endforeach
+
+        </select>
+
+        <select name="inventory_location_id"
+                class="rounded-xl border-slate-300">
+
+            @foreach(\App\Models\InventoryLocation::orderBy('name')->get() as $location)
+
+                <option value="{{ $location->id }}">
+                    {{ $location->name }}
+                </option>
+
+            @endforeach
+
+        </select>
+
+        <input
+            type="number"
+            name="quantity"
+            value="1"
+            min="1"
+            class="rounded-xl border-slate-300">
+
+        <button
+            class="bg-[#ff8a00] text-white rounded-xl font-black">
+            Add Part
+        </button>
+
+    </form>
+
+    <div class="mt-6 overflow-hidden rounded-2xl border">
+
+        <table class="w-full text-sm">
+
+            <thead class="bg-slate-50">
+
+                <tr>
+
+                    <th class="p-3 text-left">
+                        Item
+                    </th>
+
+                    <th class="p-3 text-left">
+                        Qty
+                    </th>
+
+                    <th class="p-3 text-left">
+                        Location
+                    </th>
+
+                    <th class="p-3 text-left">
+                        Used At
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            @forelse($task->partUsages as $usage)
+
+                <tr class="border-t">
+
+                    <td class="p-3">
+                        {{ $usage->item?->name }}
+                    </td>
+
+                    <td class="p-3 font-black">
+                        {{ $usage->quantity }}
+                    </td>
+
+                    <td class="p-3">
+                        {{ $usage->location?->name }}
+                    </td>
+
+                    <td class="p-3">
+                        {{ optional($usage->used_at)->format('d M Y H:i') }}
+                    </td>
+
+                </tr>
+
+            @empty
+
+                <tr>
+
+                    <td colspan="4"
+                        class="p-6 text-center text-slate-400">
+
+                        No parts used.
+
+                    </td>
+
+                </tr>
+
+            @endforelse
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+
+<div class="bg-white rounded-3xl shadow p-6 mt-6">
+
+    <h2 class="text-xl font-black mb-4">
+        Customer Sign-Off
+    </h2>
+
+    @if($task->customer_signed_at)
+
+        <div class="rounded-2xl bg-green-50 p-5">
+
+            <div class="font-black text-green-700">
+                Signed
+            </div>
+
+            <div class="mt-2">
+                {{ $task->customer_signoff_name }}
+            </div>
+
+            <div class="text-sm text-slate-500 mt-1">
+                {{ $task->customer_signed_at }}
+            </div>
+
+            @if($task->customer_signoff_notes)
+                <div class="mt-3">
+                    {{ $task->customer_signoff_notes }}
+                </div>
+            @endif
+
+        </div>
+
+    @else
+
+        <form
+            method="POST"
+            action="{{ route('tasks.signoff',$task) }}"
+            class="space-y-4">
+
+            @csrf
+
+            <input
+                name="customer_signoff_name"
+                placeholder="Customer Name"
+                class="w-full rounded-xl border-slate-300">
+
+            <textarea
+                name="customer_signoff_notes"
+                rows="3"
+                placeholder="Comments"
+                class="w-full rounded-xl border-slate-300"></textarea>
+
+            <button
+                class="px-5 py-3 bg-[#ff8a00] text-white rounded-xl font-black">
+
+                Sign-Off
+
+            </button>
+
+        </form>
+
+    @endif
+
+</div>
+
+
+<div class="bg-white rounded-3xl shadow p-6 mt-6">
+
+    <h2 class="text-xl font-black mb-5">
+        Before / After Photos
+    </h2>
+
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+        action="{{ route('task.photos.store',$task) }}"
+        class="grid md:grid-cols-4 gap-4 mb-6">
+
+        @csrf
+
+        <select
+            name="photo_type"
+            class="rounded-xl border-slate-300">
+
+            <option value="before">Before</option>
+            <option value="after">After</option>
+            <option value="issue">Issue</option>
+            <option value="completion">Completion</option>
+
+        </select>
+
+        <input
+            type="file"
+            name="photo"
+            class="rounded-xl border-slate-300">
+
+        <input
+            name="notes"
+            placeholder="Notes"
+            class="rounded-xl border-slate-300">
+
+        <button
+            class="bg-[#ff8a00] text-white rounded-xl font-black">
+            Upload
+        </button>
+
+    </form>
+
+    <div class="grid md:grid-cols-4 gap-4">
+
+        @foreach($task->taskPhotos as $photo)
+
+            <div class="border rounded-2xl overflow-hidden">
+
+                <img
+                    src="{{ asset('storage/'.$photo->photo_path) }}"
+                    class="w-full h-40 object-cover">
+
+                <div class="p-3">
+
+                    <div class="font-black uppercase text-xs">
+                        {{ $photo->photo_type }}
+                    </div>
+
+                    <div class="text-xs text-slate-500 mt-1">
+                        {{ $photo->notes }}
+                    </div>
+
+                </div>
+
+            </div>
+
+        @endforeach
+
+    </div>
+
+</div>
+
 </x-app-layout>

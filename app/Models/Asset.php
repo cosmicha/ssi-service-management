@@ -3,11 +3,26 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Asset extends Model
 {
+
+
+    protected static function booted()
+    {
+        static::creating(function ($asset) {
+
+            if (!$asset->qr_uuid) {
+                $asset->qr_uuid = (string) Str::uuid();
+            }
+
+        });
+    }
+
+
     protected $fillable = [
         'customer_id',
         'customer_region_id',
@@ -15,6 +30,7 @@ class Asset extends Model
         'asset_category_id',
         'name',
         'asset_code',
+        'qr_uuid',
         'brand',
         'model',
         'serial_number',
@@ -22,6 +38,10 @@ class Asset extends Model
         'purchase_date',
         'warranty_expiry',
         'status',
+        'lifecycle_notes',
+        'disposed_at',
+        'retired_at',
+        'lifecycle_status',
         'description',
     ];
 
@@ -48,6 +68,22 @@ class Asset extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(AssetAttachment::class);
+    }
+
+
+    protected $casts = [
+        'disposed_at' => 'datetime',
+        'retired_at' => 'datetime',
+    ];
+
+    public function scopeVisibleTo($query, $user)
+    {
+        return \App\Support\TenantScope::apply(
+            $query,
+            $user,
+            'customer_id',
+            'customer_branch_id'
+        );
     }
 
 }

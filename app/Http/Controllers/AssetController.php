@@ -19,7 +19,8 @@ class AssetController extends Controller
         $customerId = $request->query('customer');
         $branchId = $request->query('branch');
 
-        $assets = Asset::with(['customer', 'region', 'branch', 'category'])
+        $assets = Asset::visibleTo(auth()->user())
+            ->with(['customer', 'region', 'branch', 'category'])
             ->when($customerId, fn ($q) => $q->where('customer_id', $customerId))
             ->when($branchId, fn ($q) => $q->where('customer_branch_id', $branchId))
             ->latest()
@@ -30,9 +31,36 @@ class AssetController extends Controller
 
     public function create(Request $request)
     {
-        $customers = Customer::orderBy('name')->get();
-        $regions = CustomerRegion::with('customer')->orderBy('name')->get();
-        $branches = CustomerBranch::with(['customer', 'region'])->orderBy('name')->get();
+        $customers =
+            \App\Support\TenantScope::isInternal(auth()->user())
+                ? Customer::orderBy('name')->get()
+                : Customer::where('id', auth()->user()?->customer_id)->get();
+
+        $regions =
+            CustomerRegion::query()
+                ->when(
+                    auth()->user()?->customer_id,
+                    fn($q) => $q->where(
+                        'customer_id',
+                        auth()->user()?->customer_id
+                    )
+                )
+                ->with('customer')
+                ->orderBy('name')
+                ->get();
+
+        $branches =
+            CustomerBranch::query()
+                ->when(
+                    auth()->user()?->customer_id,
+                    fn($q) => $q->where(
+                        'customer_id',
+                        auth()->user()?->customer_id
+                    )
+                )
+                ->with(['customer','region'])
+                ->orderBy('name')
+                ->get();
         $categories = AssetCategory::where('status', 'active')->orderBy('name')->get();
 
         $selectedCustomerId = $request->query('customer');
@@ -77,6 +105,35 @@ class AssetController extends Controller
     {
         $asset->load(['customer', 'region', 'branch', 'category', 'attachments']);
 
+        $assetHistory = [
+            'incidents' => \App\Models\Incident::with(['task.partUsages.item'])
+                ->where('asset_id', $asset->id)
+                ->latest()
+                ->limit(10)
+                ->get(),
+
+            'changes' => \App\Models\ChangeRequest::with(['task.partUsages.item'])
+                ->where('asset_id', $asset->id)
+                ->latest()
+                ->limit(10)
+                ->get(),
+
+            'tasks' => \App\Models\Task::with(['partUsages.item', 'assignee'])
+                ->where('asset_id', $asset->id)
+                ->latest()
+                ->limit(20)
+                ->get(),
+
+            'usedParts' => \App\Models\TaskPartUsage::with(['item', 'task'])
+                ->whereHas('task', function ($q) use ($asset) {
+                    $q->where('asset_id', $asset->id);
+                })
+                ->latest()
+                ->limit(20)
+                ->get(),
+        ];
+        $asset->load(['customer', 'region', 'branch', 'category', 'attachments']);
+
         $pmExecutions = PreventiveExecution::with(['task', 'engineer'])
             ->whereHas('task', function ($q) use ($asset) {
                 $q->where('asset_id', $asset->id);
@@ -94,11 +151,72 @@ class AssetController extends Controller
             ->latest()
             ->get();
 
+
+        $assetTimeline = collect();
+
+        foreach (($incidents ?? collect()) as $incident) {
+            $assetTimeline->push([
+                'date' => $incident->created_at,
+                'type' => 'Incident',
+                'title' => $incident->title,
+                'description' => $incident->status,
+                'url' => route('incidents.show', $incident),
+            ]);
+        }
+
+        foreach (($changeRequests ?? collect()) as $change) {
+            $assetTimeline->push([
+                'date' => $change->created_at,
+                'type' => 'Change Request',
+                'title' => $change->title,
+                'description' => $change->status,
+                'url' => route('change-requests.show', $change),
+            ]);
+        }
+
+        foreach (($pmExecutions ?? collect()) as $pm) {
+            $assetTimeline->push([
+                'date' => $pm->created_at,
+                'type' => 'Preventive Maintenance',
+                'title' => 'PM Execution',
+                'description' => $pm->status ?? 'completed',
+                'url' => route('preventive-executions.show', $pm),
+            ]);
+        }
+
+        foreach (($assetHistory['tasks'] ?? collect()) as $task) {
+            $assetTimeline->push([
+                'date' => $task->created_at,
+                'type' => 'Task',
+                'title' => $task->title,
+                'description' => $task->status,
+                'url' => route('tasks.show', $task),
+            ]);
+        }
+
+        foreach (($assetHistory['usedParts'] ?? collect()) as $usage) {
+            $assetTimeline->push([
+                'date' => $usage->used_at ?? $usage->created_at,
+                'type' => 'Used Part',
+                'title' => ($usage->item?->name ?? 'Part') . ' x' . $usage->quantity,
+                'description' => $usage->task?->task_no ?? null,
+                'url' => $usage->task ? route('tasks.show', $usage->task) : null,
+            ]);
+        }
+
+        $assetTimeline = $assetTimeline
+            ->filter(fn($item) => $item['date'])
+            ->sortByDesc('date')
+            ->values();
+
+
         return view('assets.show', compact(
             'asset',
             'pmExecutions',
             'incidents',
-            'changeRequests'
+            'changeRequests',
+            'assetHistory',
+            'assetTimeline'
         ));
     }
 
@@ -106,9 +224,36 @@ class AssetController extends Controller
     {
         $asset->load('attachments');
 
-        $customers = Customer::orderBy('name')->get();
-        $regions = CustomerRegion::with('customer')->orderBy('name')->get();
-        $branches = CustomerBranch::with(['customer', 'region'])->orderBy('name')->get();
+        $customers =
+            \App\Support\TenantScope::isInternal(auth()->user())
+                ? Customer::orderBy('name')->get()
+                : Customer::where('id', auth()->user()?->customer_id)->get();
+
+        $regions =
+            CustomerRegion::query()
+                ->when(
+                    auth()->user()?->customer_id,
+                    fn($q) => $q->where(
+                        'customer_id',
+                        auth()->user()?->customer_id
+                    )
+                )
+                ->with('customer')
+                ->orderBy('name')
+                ->get();
+
+        $branches =
+            CustomerBranch::query()
+                ->when(
+                    auth()->user()?->customer_id,
+                    fn($q) => $q->where(
+                        'customer_id',
+                        auth()->user()?->customer_id
+                    )
+                )
+                ->with(['customer','region'])
+                ->orderBy('name')
+                ->get();
         $categories = AssetCategory::orderBy('name')->get();
 
         return view('assets.edit', compact(
@@ -152,4 +297,42 @@ class AssetController extends Controller
         return redirect()->route('assets.index')
             ->with('success', 'Asset deleted successfully.');
     }
+
+    public function updateLifecycle(\Illuminate\Http\Request $request, \App\Models\Asset $asset)
+    {
+        $data = $request->validate([
+            'lifecycle_status' => ['required', 'in:active,under_repair,standby,retired,disposed'],
+            'lifecycle_notes' => ['nullable', 'string'],
+        ]);
+
+        $payload = [
+            'lifecycle_status' => $data['lifecycle_status'],
+            'lifecycle_notes' => $data['lifecycle_notes'] ?? null,
+        ];
+
+        if ($data['lifecycle_status'] === 'retired' && !$asset->retired_at) {
+            $payload['retired_at'] = now();
+        }
+
+        if ($data['lifecycle_status'] === 'disposed' && !$asset->disposed_at) {
+            $payload['disposed_at'] = now();
+        }
+
+        $asset->update($payload);
+
+        return back()->with('success', 'Asset lifecycle updated.');
+    }
+
+
+    private function authorizeAssetAccess($asset): void
+    {
+        $allowed =
+            \App\Models\Asset::visibleTo(auth()->user())
+                ->where('id', $asset->id)
+                ->exists();
+
+        abort_unless($allowed, 403);
+    }
+
+
 }

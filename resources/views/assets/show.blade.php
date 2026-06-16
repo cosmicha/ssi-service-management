@@ -1,4 +1,12 @@
 <x-app-layout>
+
+@php
+$assetHistory = $assetHistory ?? [
+    'tasks' => collect(),
+    'usedParts' => collect(),
+];
+@endphp
+
     <div class="mb-6 flex items-start justify-between">
         <div>
             <h1 class="text-2xl font-black text-slate-900">{{ $asset->name }}</h1>
@@ -275,4 +283,236 @@
             <a href="#" class="p-4 rounded-xl border border-slate-200 text-slate-400 font-semibold">History</a>
         </div>
     </div>
+
+<div class="bg-white rounded-3xl shadow p-6 mt-6">
+    <h2 class="text-xl font-black mb-4">
+        Asset Service History
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">Incidents</div>
+            <div class="text-3xl font-black">{{ $assetHistory['incidents']->count() ?? 0 }}</div>
+        </div>
+
+        <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">Tasks</div>
+            <div class="text-3xl font-black">{{ $assetHistory['tasks']->count() ?? 0 }}</div>
+        </div>
+
+        <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">Changes</div>
+            <div class="text-3xl font-black">{{ $assetHistory['changes']->count() ?? 0 }}</div>
+        </div>
+
+        <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">Parts Used</div>
+            <div class="text-3xl font-black">{{ $assetHistory['usedParts']->sum('quantity') ?? 0 }}</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="rounded-2xl border overflow-hidden">
+            <div class="px-5 py-4 bg-slate-50 font-black">
+                Recent Tasks
+            </div>
+
+            <div class="divide-y">
+                @forelse($assetHistory['tasks'] ?? [] as $task)
+                    <a href="{{ route('tasks.show', $task) }}" class="block p-5 hover:bg-orange-50">
+                        <div class="font-black">{{ $task->title }}</div>
+                        <div class="text-xs text-slate-500 mt-1">
+                            {{ $task->task_no }} • {{ ucfirst(str_replace('_',' ', $task->status)) }}
+                            • {{ $task->created_at?->format('d M Y') }}
+                        </div>
+
+                        @if($task->partUsages->count())
+                            <div class="mt-2 text-xs text-slate-600">
+                                Parts:
+                                @foreach($task->partUsages as $usage)
+                                    <span class="inline-block mr-2">
+                                        {{ $usage->item?->name }} x{{ $usage->quantity }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
+                    </a>
+                @empty
+                    <div class="p-5 text-slate-400">No task history.</div>
+                @endforelse
+            </div>
+        </div>
+
+        <div class="rounded-2xl border overflow-hidden">
+            <div class="px-5 py-4 bg-slate-50 font-black">
+                Used Parts History
+            </div>
+
+            <div class="divide-y">
+                @forelse($assetHistory['usedParts'] ?? [] as $usage)
+                    <div class="p-5">
+                        <div class="font-black">{{ $usage->item?->name }}</div>
+                        <div class="text-xs text-slate-500 mt-1">
+                            Qty {{ $usage->quantity }}
+                            • {{ $usage->used_at?->format('d M Y H:i') }}
+                            @if($usage->task)
+                                • Task {{ $usage->task->task_no }}
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-5 text-slate-400">No parts used.</div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="bg-white rounded-3xl shadow p-6 mt-6">
+    <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+            <h2 class="text-xl font-black">Lifecycle Management</h2>
+            <p class="text-sm text-slate-500">Track asset operational lifecycle status.</p>
+        </div>
+
+        @php
+            $lifeColor = match($asset->lifecycle_status ?? 'active') {
+                'active' => 'bg-green-100 text-green-700',
+                'under_repair' => 'bg-yellow-100 text-yellow-700',
+                'standby' => 'bg-blue-100 text-blue-700',
+                'retired' => 'bg-slate-100 text-slate-700',
+                'disposed' => 'bg-red-100 text-red-700',
+                default => 'bg-slate-100 text-slate-700',
+            };
+        @endphp
+
+        <span class="px-4 py-2 rounded-full text-xs font-black {{ $lifeColor }}">
+            {{ strtoupper(str_replace('_',' ', $asset->lifecycle_status ?? 'ACTIVE')) }}
+        </span>
+    </div>
+
+    <form method="POST" action="{{ route('assets.lifecycle.update', $asset) }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        @csrf
+        @method('PATCH')
+
+        <div>
+            <label class="block text-sm font-black mb-2">Lifecycle Status</label>
+            <select name="lifecycle_status" class="w-full rounded-xl border-slate-300">
+                @foreach(['active','under_repair','standby','retired','disposed'] as $status)
+                    <option value="{{ $status }}" @selected(($asset->lifecycle_status ?? 'active') === $status)>
+                        {{ ucfirst(str_replace('_',' ', $status)) }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="md:col-span-2">
+            <label class="block text-sm font-black mb-2">Lifecycle Notes</label>
+            <input name="lifecycle_notes" value="{{ old('lifecycle_notes', $asset->lifecycle_notes) }}" class="w-full rounded-xl border-slate-300" placeholder="Reason, condition, or disposal note">
+        </div>
+
+        <div>
+            <button class="px-5 py-3 rounded-xl bg-black text-white font-black">
+                Update Lifecycle
+            </button>
+        </div>
+    </form>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+        <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">Retired At</div>
+            <div class="font-black mt-1">{{ $asset->retired_at?->format('d M Y H:i') ?? '-' }}</div>
+        </div>
+
+        <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs text-slate-500">Disposed At</div>
+            <div class="font-black mt-1">{{ $asset->disposed_at?->format('d M Y H:i') ?? '-' }}</div>
+        </div>
+    </div>
+</div>
+
+
+<div class="bg-white rounded-3xl shadow p-6 mt-6">
+
+    <h2 class="text-xl font-black mb-5">
+        Asset QR Code
+    </h2>
+
+    <div class="flex flex-col items-center">
+
+        
+@if($asset->qr_uuid)
+
+    {!! QrCode::size(220)->generate(
+        route('asset.qr',$asset->qr_uuid)
+    ) !!}
+
+@else
+
+    <div class="p-6 rounded-xl bg-red-50 text-red-600">
+        QR UUID Missing
+    </div>
+
+@endif
+
+
+        <div class="mt-4 text-sm text-slate-500 text-center break-all">
+            
+@if($asset->qr_uuid)
+{{ route('asset.qr',$asset->qr_uuid) }}
+@endif
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="bg-white rounded-3xl shadow p-6 mt-6">
+    <h2 class="text-xl font-black mb-5">Asset Timeline</h2>
+
+    <div class="space-y-4">
+        @forelse(($assetTimeline ?? collect()) as $event)
+            <div class="flex gap-4">
+                <div class="w-28 text-xs text-slate-500 pt-1">
+                    {{ $event['date']?->format('d M Y') }}
+                </div>
+
+                <div class="w-3 flex flex-col items-center">
+                    <div class="w-3 h-3 rounded-full bg-[#ff8a00] mt-1"></div>
+                    <div class="w-px bg-slate-200 flex-1"></div>
+                </div>
+
+                <div class="flex-1 rounded-2xl border p-4 hover:bg-orange-50">
+                    <div class="text-xs font-black text-[#ff8a00]">
+                        {{ $event['type'] }}
+                    </div>
+
+                    <div class="font-black mt-1">
+                        @if($event['url'])
+                            <a href="{{ $event['url'] }}" class="hover:underline">
+                                {{ $event['title'] }}
+                            </a>
+                        @else
+                            {{ $event['title'] }}
+                        @endif
+                    </div>
+
+                    @if($event['description'])
+                        <div class="text-sm text-slate-500 mt-1 capitalize">
+                            {{ str_replace('_',' ', $event['description']) }}
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @empty
+            <div class="text-slate-400 text-center py-10">
+                No timeline available.
+            </div>
+        @endforelse
+    </div>
+</div>
+
 </x-app-layout>

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Support\NumberGenerator;
+use App\Services\NotificationService;
 
 class Task extends Model
 {
@@ -14,6 +15,113 @@ class Task extends Model
 
             if (!$task->task_no) {
                 $task->task_no = NumberGenerator::generate('TSK');
+            }
+
+        });
+
+        static::updated(function ($task) {
+
+            if (
+                $task->wasChanged('assigned_to')
+                && $task->assigned_to
+            ) {
+
+                $task->loadMissing([
+                    'assignee',
+                    'customer',
+                    'asset'
+                ]);
+
+                NotificationService::sendTaskAssigned(
+                    $task
+                );
+
+            }
+
+            if (
+                $task->wasChanged('status')
+                && strtolower($task->status ?? '') === 'completed'
+            ) {
+
+                $task->loadMissing([
+                    'assignee',
+                    'customer',
+                    'branch',
+                    'asset'
+                ]);
+
+                $message =
+                    "WORK ORDER COMPLETED\n\n" .
+                    "Task No : " . ($task->task_no ?? '-') . "\n" .
+                    "Title : " . ($task->title ?? '-') . "\n" .
+                    "Customer : " . ($task->customer?->name ?? '-') . "\n" .
+                    "Site : " . ($task->branch?->name ?? '-') . "\n" .
+                    "Asset : " . ($task->asset?->name ?? '-') . "\n" .
+                    "Engineer : " . ($task->assignee?->name ?? '-') . "\n" .
+                    "Completed At : " . now()->format('d M Y H:i') . "\n" .
+                    "Status : COMPLETED";
+
+                NotificationService::send(
+                    '[SSI] Task Completed - ' . ($task->task_no ?? $task->id),
+                    $message,
+                    env('SSI_NOTIFICATION_EMAIL'),
+                    url('/tasks/' . $task->id),
+                    'View Work Order'
+                );
+
+            }
+
+            if (
+                $task->wasChanged('customer_signed_at')
+                &&
+                $task->customer_signed_at
+            ) {
+
+                $task->loadMissing([
+                    'customer',
+                    'branch',
+                    'asset',
+                    'assignee',
+                ]);
+
+                $message =
+                    "CUSTOMER SIGN-OFF RECEIVED\n\n" .
+
+                    "Task No : " .
+                    ($task->task_no ?? '-') . "\n" .
+
+                    "Customer : " .
+                    ($task->customer?->name ?? '-') . "\n" .
+
+                    "Site : " .
+                    ($task->branch?->name ?? '-') . "\n" .
+
+                    "Asset : " .
+                    ($task->asset?->name ?? '-') . "\n\n" .
+
+                    "Signed By : " .
+                    ($task->customer_signoff_name ?? '-') . "\n" .
+
+                    "Signed At : " .
+                    optional($task->customer_signed_at)
+                        ?->format('d M Y H:i') . "\n\n" .
+
+                    "Comments\n" .
+                    ($task->customer_signoff_notes ?? '-');
+
+                NotificationService::send(
+                    '[SSI] Customer Sign-Off - ' .
+                    ($task->task_no ?? $task->id),
+
+                    $message,
+
+                    env('SSI_NOTIFICATION_EMAIL'),
+
+                    url('/tasks/' . $task->id),
+
+                    'View Work Order'
+                );
+
             }
 
         });
@@ -55,6 +163,9 @@ class Task extends Model
         'team_name',
         'assigned_vendor',
         'work_order_no',
+        'customer_signed_at',
+        'customer_signoff_notes',
+        'customer_signoff_name',
     ];
 
     protected $casts = [
@@ -71,6 +182,7 @@ class Task extends Model
         'actual_start_at' => 'datetime',
         'planned_finish_at' => 'datetime',
         'planned_start_at' => 'datetime',
+        'customer_signed_at' => 'datetime',
     ];
 
     public function customer(): BelongsTo
@@ -129,6 +241,41 @@ class Task extends Model
     {
         return $this->hasMany(TaskWorkLog::class)
             ->orderBy('logged_at');
+    }
+
+
+    public function partUsages()
+    {
+        return $this->hasMany(\App\Models\TaskPartUsage::class);
+    }
+
+
+    public function taskPhotos()
+    {
+        return $this->hasMany(
+            \App\Models\TaskPhoto::class
+        );
+    }
+
+
+
+    public function scopeVisibleTo($query, $user)
+    {
+        $query = \App\Support\TenantScope::apply(
+            $query,
+            $user,
+            'customer_id',
+            'customer_branch_id'
+        );
+
+        if (
+            $user
+            && $user->role === 'engineer'
+        ) {
+            $query->where('assigned_to', $user->id);
+        }
+
+        return $query;
     }
 
 }

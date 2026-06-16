@@ -18,7 +18,8 @@ class TaskController extends Controller
         $status = $request->query('status');
         $type = $request->query('type');
 
-        $tasks = Task::with(['customer', 'branch', 'asset', 'assignee'])
+        $tasks = Task::visibleTo(auth()->user())
+            ->with(['customer', 'branch', 'asset', 'assignee'])
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($type, fn ($q) => $q->where('task_type', $type))
             ->latest()
@@ -30,10 +31,36 @@ class TaskController extends Controller
     public function create()
     {
         return view('tasks.create', [
-            'customers' => Customer::orderBy('name')->get(),
-            'regions' => CustomerRegion::with('customer')->orderBy('name')->get(),
-            'branches' => CustomerBranch::with('customer')->orderBy('name')->get(),
-            'assets' => Asset::with(['customer', 'branch'])->orderBy('name')->get(),
+            'customers' =>
+                \App\Support\TenantScope::isInternal(auth()->user())
+                    ? Customer::orderBy('name')->get()
+                    : Customer::where('id', auth()->user()?->customer_id)->get(),
+
+            'regions' =>
+                CustomerRegion::query()
+                    ->when(
+                        auth()->user()?->customer_id,
+                        fn($q) => $q->where('customer_id', auth()->user()?->customer_id)
+                    )
+                    ->with('customer')
+                    ->orderBy('name')
+                    ->get(),
+
+            'branches' =>
+                CustomerBranch::query()
+                    ->when(
+                        auth()->user()?->customer_id,
+                        fn($q) => $q->where('customer_id', auth()->user()?->customer_id)
+                    )
+                    ->with('customer')
+                    ->orderBy('name')
+                    ->get(),
+
+            'assets' =>
+                Asset::visibleTo(auth()->user())
+                    ->with(['customer','branch'])
+                    ->orderBy('name')
+                    ->get(),
             'users' => User::orderBy('name')->get(),
         ]);
     }
@@ -54,6 +81,23 @@ class TaskController extends Controller
             'planned_date' => ['nullable', 'date'],
             'due_date' => ['nullable', 'date'],
         ]);
+
+        $user = auth()->user();
+
+        if (
+            $user
+            && !\App\Support\TenantScope::isInternal($user)
+        ) {
+            $data['customer_id'] = $user->customer_id;
+
+            if (
+                $user->customer_access_scope === 'branch'
+                && $user->customer_branch_id
+            ) {
+                $data['customer_branch_id'] =
+                    $user->customer_branch_id;
+            }
+        }
 
         $data['task_no'] = \App\Support\NumberGenerator::generate('TSK');
         $data['created_by'] = auth()->id();
@@ -77,10 +121,36 @@ class TaskController extends Controller
     {
         return view('tasks.edit', [
             'task' => $task,
-            'customers' => Customer::orderBy('name')->get(),
-            'regions' => CustomerRegion::with('customer')->orderBy('name')->get(),
-            'branches' => CustomerBranch::with('customer')->orderBy('name')->get(),
-            'assets' => Asset::with(['customer', 'branch'])->orderBy('name')->get(),
+            'customers' =>
+                \App\Support\TenantScope::isInternal(auth()->user())
+                    ? Customer::orderBy('name')->get()
+                    : Customer::where('id', auth()->user()?->customer_id)->get(),
+
+            'regions' =>
+                CustomerRegion::query()
+                    ->when(
+                        auth()->user()?->customer_id,
+                        fn($q) => $q->where('customer_id', auth()->user()?->customer_id)
+                    )
+                    ->with('customer')
+                    ->orderBy('name')
+                    ->get(),
+
+            'branches' =>
+                CustomerBranch::query()
+                    ->when(
+                        auth()->user()?->customer_id,
+                        fn($q) => $q->where('customer_id', auth()->user()?->customer_id)
+                    )
+                    ->with('customer')
+                    ->orderBy('name')
+                    ->get(),
+
+            'assets' =>
+                Asset::visibleTo(auth()->user())
+                    ->with(['customer','branch'])
+                    ->orderBy('name')
+                    ->get(),
             'users' => User::orderBy('name')->get(),
         ]);
     }
@@ -140,4 +210,69 @@ class TaskController extends Controller
 
         return back()->with('success', 'Task status updated.');
     }
+
+
+    public function signoff(
+        \Illuminate\Http\Request $request,
+        \App\Models\Task $task
+    )
+    {
+        $data = $request->validate([
+            'customer_signoff_name' => 'required',
+            'customer_signoff_notes' => 'nullable',
+        ]);
+
+        $task->update([
+            'customer_signoff_name' =>
+                $data['customer_signoff_name'],
+
+            'customer_signoff_notes' =>
+                $data['customer_signoff_notes'] ?? null,
+
+            'customer_signed_at' =>
+                now(),
+        ]);
+
+        return back()
+            ->with('success',
+                'Customer sign-off completed.');
+    }
+
+
+
+
+    public function pdf(\App\Models\Task $task)
+    {
+        $task->load([
+            'customer',
+            'branch',
+            'asset',
+            'assignee',
+            'partUsages.item',
+            'partUsages.location',
+            'workLogs',
+            'updates.user',
+        ]);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('tasks.pdf', [
+            'task' => $task,
+            'setting' => \App\Models\AppSetting::current(),
+        ])->setPaper('a4');
+
+        return $pdf->stream(($task->task_no ?? 'task') . '-report.pdf');
+    }
+
+
+
+    private function authorizeTaskAccess($task): void
+    {
+        $allowed =
+            \App\Models\Task::visibleTo(auth()->user())
+                ->where('id', $task->id)
+                ->exists();
+
+        abort_unless($allowed, 403);
+    }
+
+
 }

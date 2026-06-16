@@ -12,13 +12,21 @@ use App\Models\IncidentAttachment;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Services\SlaService;
 use Illuminate\Support\Str;
 
 class IncidentController extends Controller
 {
     public function index()
     {
-        $incidents = Incident::with(['customer','branch','asset','category','task'])
+        $incidents = Incident::visibleTo(auth()->user())
+            ->with([
+                'customer',
+                'branch',
+                'asset',
+                'category',
+                'task'
+            ])
             ->latest()
             ->paginate(15);
 
@@ -28,10 +36,42 @@ class IncidentController extends Controller
     public function create()
     {
         return view('incidents.create', [
-            'customers' => Customer::orderBy('name')->get(),
-            'regions' => CustomerRegion::with('customer')->orderBy('name')->get(),
-            'branches' => CustomerBranch::with('customer')->orderBy('name')->get(),
-            'assets' => Asset::with(['customer','branch'])->orderBy('name')->get(),
+            'customers' =>
+                \App\Support\TenantScope::isInternal(auth()->user())
+                    ? Customer::orderBy('name')->get()
+                    : Customer::where('id', auth()->user()?->customer_id)->get(),
+
+            'regions' =>
+                CustomerRegion::query()
+                    ->when(
+                        auth()->user()?->customer_id,
+                        fn($q) => $q->where(
+                            'customer_id',
+                            auth()->user()?->customer_id
+                        )
+                    )
+                    ->with('customer')
+                    ->orderBy('name')
+                    ->get(),
+
+            'branches' =>
+                CustomerBranch::query()
+                    ->when(
+                        auth()->user()?->customer_id,
+                        fn($q) => $q->where(
+                            'customer_id',
+                            auth()->user()?->customer_id
+                        )
+                    )
+                    ->with('customer')
+                    ->orderBy('name')
+                    ->get(),
+
+            'assets' =>
+                Asset::visibleTo(auth()->user())
+                    ->with(['customer','branch'])
+                    ->orderBy('name')
+                    ->get(),
             'categories' => IncidentCategory::where('status','active')->orderBy('name')->get(),
             'users' => User::orderBy('name')->get(),
         ]);
@@ -126,6 +166,8 @@ class IncidentController extends Controller
 
         $incident->update(['task_id' => $task->id]);
 
+        app(SlaService::class)->applyToIncident($incident);
+
         return redirect()->route('incidents.show', $incident)
             ->with('success', 'Incident created and corrective task generated.');
     }
@@ -141,10 +183,42 @@ class IncidentController extends Controller
     {
         return view('incidents.edit', [
             'incident' => $incident,
-            'customers' => Customer::orderBy('name')->get(),
-            'regions' => CustomerRegion::with('customer')->orderBy('name')->get(),
-            'branches' => CustomerBranch::with('customer')->orderBy('name')->get(),
-            'assets' => Asset::with(['customer','branch'])->orderBy('name')->get(),
+            'customers' =>
+                \App\Support\TenantScope::isInternal(auth()->user())
+                    ? Customer::orderBy('name')->get()
+                    : Customer::where('id', auth()->user()?->customer_id)->get(),
+
+            'regions' =>
+                CustomerRegion::query()
+                    ->when(
+                        auth()->user()?->customer_id,
+                        fn($q) => $q->where(
+                            'customer_id',
+                            auth()->user()?->customer_id
+                        )
+                    )
+                    ->with('customer')
+                    ->orderBy('name')
+                    ->get(),
+
+            'branches' =>
+                CustomerBranch::query()
+                    ->when(
+                        auth()->user()?->customer_id,
+                        fn($q) => $q->where(
+                            'customer_id',
+                            auth()->user()?->customer_id
+                        )
+                    )
+                    ->with('customer')
+                    ->orderBy('name')
+                    ->get(),
+
+            'assets' =>
+                Asset::visibleTo(auth()->user())
+                    ->with(['customer','branch'])
+                    ->orderBy('name')
+                    ->get(),
             'categories' => IncidentCategory::orderBy('name')->get(),
         ]);
     }
@@ -188,6 +262,8 @@ class IncidentController extends Controller
             ]);
         }
 
+        app(SlaService::class)->applyToIncident($incident);
+
         return redirect()->route('incidents.show', $incident)
             ->with('success', 'Incident updated.');
     }
@@ -205,4 +281,16 @@ class IncidentController extends Controller
 
         return redirect()->route('incidents.index')->with('success', 'Incident deleted.');
     }
+
+    private function authorizeIncidentAccess($incident): void
+    {
+        $allowed =
+            \App\Models\Incident::visibleTo(auth()->user())
+                ->where('id', $incident->id)
+                ->exists();
+
+        abort_unless($allowed, 403);
+    }
+
+
 }

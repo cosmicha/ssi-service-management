@@ -1,6 +1,18 @@
 <x-app-layout>
     <div class="mb-8">
+        <div class="flex items-start justify-between gap-4 mb-6">
+    <div>
         <h1 class="text-3xl font-black text-slate-950">Dashboard</h1>
+        <p class="text-slate-500 mt-1">Service operation summary and SLA health.</p>
+    </div>
+
+    <form method="POST" action="{{ route('sla.refresh') }}">
+        @csrf
+        <button class="px-4 py-2.5 rounded-xl bg-black text-white font-bold hover:bg-[#ff8a00] hover:text-black">
+            Refresh SLA
+        </button>
+    </form>
+</div>
         <p class="text-slate-500 mt-1">Operations overview and real-time summary of your service management.</p>
     </div>
 
