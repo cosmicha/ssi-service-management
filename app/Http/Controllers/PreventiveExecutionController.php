@@ -108,7 +108,7 @@ class PreventiveExecutionController extends Controller
         if ($preventiveExecution->task) {
 
             $preventiveExecution->task->update([
-                'status' => 'completed',
+                'status' => 'done',
             ]);
         }
 

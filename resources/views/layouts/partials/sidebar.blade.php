@@ -126,7 +126,33 @@
                 </a>
             @endif
         @endif
-    </nav>
+    
+@php
+    $adminMenuRole = auth()->user()?->role;
+@endphp
+
+@if(in_array($adminMenuRole, ['admin','system_admin','service_manager']))
+    <div class="mt-6 px-4 text-xs font-black uppercase tracking-widest text-slate-400">
+        Administration
+    </div>
+
+    <a href="{{ route('admin.dashboard') }}"
+       class="block px-4 py-3 rounded-2xl font-bold {{ request()->is('admin') ? 'bg-[#ff8a00] text-black' : 'text-slate-600 hover:bg-slate-100' }}">
+        Admin Dashboard
+    </a>
+
+    <a href="{{ route('admin.users.index') }}"
+       class="block px-4 py-3 rounded-2xl font-bold {{ request()->is('admin/users*') ? 'bg-[#ff8a00] text-black' : 'text-slate-600 hover:bg-slate-100' }}">
+        User Management
+    </a>
+
+    <a href="{{ route('admin.import.index') }}"
+       class="block px-4 py-3 rounded-2xl font-bold {{ request()->is('admin/import*') ? 'bg-[#ff8a00] text-black' : 'text-slate-600 hover:bg-slate-100' }}">
+        Import Center
+    </a>
+@endif
+
+</nav>
 
     <div class="shrink-0 px-4 py-5 border-t border-white/10 space-y-2 bg-black">
         @if($role === 'admin')

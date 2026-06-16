@@ -107,7 +107,7 @@ class ChangeRequestController extends Controller
 
     public function submit(ChangeRequest $changeRequest)
     {
-        $changeRequest->update(['status' => 'submitted']);
+        $changeRequest->update(['status' => 'open']);
 
         return back()->with('success', 'Change Request submitted.');
     }
@@ -115,7 +115,7 @@ class ChangeRequestController extends Controller
     public function approve(ChangeRequest $changeRequest)
     {
         $changeRequest->update([
-            'status' => 'approved',
+            'status' => 'assigned',
             'approved_by' => auth()->id(),
             'approved_at' => now(),
         ]);
@@ -125,9 +125,9 @@ class ChangeRequestController extends Controller
 
     public function reject(ChangeRequest $changeRequest)
     {
-        $changeRequest->update(['status' => 'rejected']);
+        $changeRequest->update(['status' => 'closed']);
 
-        return back()->with('success', 'Change Request rejected.');
+        return back()->with('success', 'Change Request closed.');
     }
 
     public function generateTask(Request $request, ChangeRequest $changeRequest)
@@ -156,7 +156,7 @@ class ChangeRequestController extends Controller
 
         $changeRequest->update([
             'task_id' => $task->id,
-            'status' => 'scheduled',
+            'status' => 'assigned',
         ]);
 
         return redirect()->route('tasks.show', $task)
@@ -181,7 +181,7 @@ class ChangeRequestController extends Controller
             'requested_date' => ['nullable','date'],
             'implementation_date' => ['nullable','date'],
             'verification_notes' => ['nullable','string'],
-            'status' => ['required','in:draft,submitted,approved,scheduled,in_progress,completed,rejected'],
+            'status' => ['required','in:open,assigned,resolved,closed'],
             'attachment_type' => ['nullable','in:supporting_document,implementation_plan,rollback_plan,diagram,config_backup,evidence'],
             'attachments.*' => ['nullable','file','max:20480'],
         ]);

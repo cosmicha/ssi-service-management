@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'admin' => AdminOnly::class,
+            'admin.only' => AdminOnly::class,
             'approved' => EnsureUserIsApproved::class,
         ]);
     })

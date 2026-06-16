@@ -21,14 +21,14 @@
 <div class="bg-white rounded-2xl border p-6 mb-6">
 <h2 class="font-black mb-4">Workflow</h2>
 <div class="flex flex-wrap gap-3">
-@if($changeRequest->status === 'draft')
+@if($changeRequest->status === 'open')
 <form method="POST" action="{{ route('change-requests.submit',$changeRequest) }}">@csrf <button class="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold">Submit</button></form>
 @endif
-@if($changeRequest->status === 'submitted')
+@if($changeRequest->status === 'assigned')
 <form method="POST" action="{{ route('change-requests.approve',$changeRequest) }}">@csrf <button class="px-4 py-2 bg-green-600 text-white rounded-xl font-semibold">Approve</button></form>
 <form method="POST" action="{{ route('change-requests.reject',$changeRequest) }}">@csrf <button class="px-4 py-2 bg-red-600 text-white rounded-xl font-semibold">Reject</button></form>
 @endif
-@if($changeRequest->status === 'approved' && !$changeRequest->task)
+@if($changeRequest->status === 'assigned' && !$changeRequest->task)
 <form method="POST" action="{{ route('change-requests.generate-task',$changeRequest) }}" class="flex gap-2">
 @csrf
 <select name="assigned_to" class="rounded-xl border-slate-300">

@@ -81,8 +81,8 @@
     <div>
         <label class="block text-sm font-semibold mb-1">Status</label>
         <select name="status" class="w-full rounded-xl border-slate-300">
-            @foreach(['draft','submitted','approved','scheduled','in_progress','completed','rejected'] as $status)
-                <option value="{{ $status }}" @selected(old('status', $changeRequest->status ?? 'draft') === $status)>{{ ucfirst(str_replace('_',' ', $status)) }}</option>
+            @foreach(['open','assigned','resolved','closed'] as $status)
+                <option value="{{ $status }}" @selected(old('status', $changeRequest->status ?? 'open') === $status)>{{ ucfirst(str_replace('_',' ', $status)) }}</option>
             @endforeach
         </select>
     </div>

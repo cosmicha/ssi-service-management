@@ -90,7 +90,7 @@ class IncidentController extends Controller
             'severity' => ['required','in:low,medium,high,critical'],
             'reported_by' => ['nullable','string','max:255'],
             'reported_at' => ['nullable','date'],
-            'status' => ['required','in:open,assigned,in_progress,resolved,closed'],
+            'status' => ['required','in:open,assigned,resolved,closed'],
             'assigned_to' => ['nullable','exists:users,id'],
             'has_sla' => ['nullable'],
             'response_minutes' => ['nullable','integer','min:1'],
@@ -236,7 +236,7 @@ class IncidentController extends Controller
             'severity' => ['required','in:low,medium,high,critical'],
             'reported_by' => ['nullable','string','max:255'],
             'reported_at' => ['nullable','date'],
-            'status' => ['required','in:open,assigned,in_progress,resolved,closed'],
+            'status' => ['required','in:open,assigned,resolved,closed'],
             'attachments.*' => ['nullable','file','max:20480'],
         ]);
 

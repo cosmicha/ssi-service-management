@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\ImportCenterController;
 use App\Http\Controllers\TaskPhotoController;
 use App\Http\Controllers\ExecutiveDashboardController;
 
@@ -115,6 +117,29 @@ Route::get('/inventory', function () {
 
 Route::resource('inventory-items', InventoryItemController::class)->except(['show']);
 Route::resource('inventory-locations', InventoryLocationController::class)->except(['show']);
+
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::resource('admin/users', UserManagementController::class)
+        ->names('admin.users')
+        ->except(['show']);
+
+    Route::get('admin/import', [ImportCenterController::class, 'index'])
+        ->name('admin.import.index');
+
+    Route::get('admin/import/{type}/template', [ImportCenterController::class, 'template'])
+        ->name('admin.import.template');
+
+    Route::post('admin/import/{type}', [ImportCenterController::class, 'import'])
+        ->name('admin.import.upload');
+});
+
+
+
+Route::middleware(['auth','admin.only'])->get('/admin', function () {
+    return view('admin.index');
+})->name('admin.dashboard');
 
 
 require __DIR__.'/auth.php';
