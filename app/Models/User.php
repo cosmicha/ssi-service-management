@@ -15,6 +15,8 @@ class User extends Authenticatable
         'email',
         'role',
         'customer_id',
+        'customer_access_scope',
+        'customer_branch_id',
         'password',
         'role',
         'is_approved',
@@ -43,6 +45,11 @@ class User extends Authenticatable
     public function customer()
     {
         return $this->belongsTo(\App\Models\Customer::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(\App\Models\CustomerBranch::class, 'customer_branch_id');
     }
 
 }
