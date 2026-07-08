@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Company extends Model
 {
     protected $fillable = [
+        'enable_email_notifications',
+        'timezone',
+        'working_hours',
+        'sla_profile',
+        'default_engineer_id',
+        'whatsapp_group',
+        'escalation_emails',
+        'admin_notification_emails',
         'name',
         'sla_response_minutes',
         'sla_resolution_minutes',
@@ -39,16 +47,36 @@ class Company extends Model
         return url('/storage/' . $this->logo_path);
     }
 
+    public function parseNotificationEmails(?string $value): array
+    {
+        return \App\Support\EmailList::parse($value);
+    }
+
     public function notificationEmailList(): array
     {
-        if (!$this->notification_emails) {
+        if (isset($this->enable_email_notifications) && !$this->enable_email_notifications) {
             return [];
         }
 
-        return collect(explode(',', $this->notification_emails))
-            ->map(fn ($email) => trim($email))
-            ->filter()
+        return collect()
+            ->merge($this->parseNotificationEmails($this->notification_emails ?? null))
+            ->merge($this->parseNotificationEmails($this->admin_notification_emails ?? null))
+            ->unique()
             ->values()
             ->all();
     }
+
+    public function escalationEmailList(): array
+    {
+        if (isset($this->enable_email_notifications) && !$this->enable_email_notifications) {
+            return [];
+        }
+
+        return collect()
+            ->merge($this->parseNotificationEmails($this->escalation_emails ?? null))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
 }

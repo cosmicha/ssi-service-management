@@ -326,10 +326,10 @@ public function analytics()
             }
         }
 
-        $this->sendTicketEmail(
+        TicketNotificationService::send(
             $problemLog,
             'New Ticket Created',
-            'A new ticket has been created.'
+            'A new ticket has been created and requires attention.'
         );
 
         try {

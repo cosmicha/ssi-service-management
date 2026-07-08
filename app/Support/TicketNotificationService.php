@@ -14,8 +14,12 @@ class TicketNotificationService
     {
         $emails = [];
 
-        if ($problemLog->company) {
+        if ($problemLog->company && method_exists($problemLog->company, 'notificationEmailList')) {
             $emails = array_merge($emails, $problemLog->company->notificationEmailList());
+        }
+
+        if (method_exists($problemLog, 'customer') && $problemLog->customer && method_exists($problemLog->customer, 'notificationEmailList')) {
+            $emails = array_merge($emails, $problemLog->customer->notificationEmailList());
         }
 
         if ($problemLog->assignedEngineer && $problemLog->assignedEngineer->email) {
